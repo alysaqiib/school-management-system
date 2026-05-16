@@ -1,0 +1,1650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Enhanced</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .navbar h1 {
+            font-size: 24px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: white;
+            color: #4facfe;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .stat-icon {
+            font-size: 40px;
+            width: 70px;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 15px;
+        }
+
+        .stat-icon.students { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .stat-icon.faculty { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+        .stat-icon.classes { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+        .stat-icon.subjects { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+        .stat-icon.fees { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+        .stat-icon.collected { background: linear-gradient(135deg, #30cfd0 0%, #330867 100%); }
+
+        .stat-info h3 {
+            font-size: 28px;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .stat-info p {
+            color: #666;
+            font-size: 13px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 12px 24px;
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            color: #666;
+        }
+
+        .tab-btn:hover {
+            border-color: #4facfe;
+            color: #4facfe;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border-color: transparent;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+
+        .card h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 22px;
+        }
+
+        .action-btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            margin-bottom: 20px;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(79, 172, 254, 0.4);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table th {
+            background: #f8f9fa;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #666;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        table td {
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+            color: #333;
+        }
+
+        table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            overflow-y: auto;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            margin: 20px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h3 {
+            color: #333;
+            font-size: 20px;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #4facfe;
+            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .alert {
+            padding: 12px 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-primary { background: #667eea; color: white; }
+        .badge-middle { background: #f093fb; color: white; }
+        .badge-high { background: #4facfe; color: white; }
+        .badge-college { background: #43e97b; color: white; }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <h1 id="adminPortalTitle">👨‍💼 Admin Dashboard</h1>
+        <div class="user-info">
+            <span>{{ user_name }}</span>
+            <button class="logout-btn" onclick="window.location.href='/logout'">Logout</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Statistics Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon students">👨‍🎓</div>
+                <div class="stat-info">
+                    <h3 id="totalStudents">0</h3>
+                    <p>Total Students</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon faculty">👨‍🏫</div>
+                <div class="stat-info">
+                    <h3 id="totalFaculty">0</h3>
+                    <p>Total Faculty</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon classes">🏫</div>
+                <div class="stat-info">
+                    <h3 id="totalClasses">0</h3>
+                    <p>Total Classes</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon subjects">📚</div>
+                <div class="stat-info">
+                    <h3 id="totalSubjects">0</h3>
+                    <p>Total Subjects</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon fees">💰</div>
+                <div class="stat-info">
+                    <h3 id="totalFees">$0</h3>
+                    <p>Total Fee Structure</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon collected">✅</div>
+                <div class="stat-info">
+                    <h3 id="collectedFees">$0</h3>
+                    <p>Fees Collected</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="showTab('classes')" id="classesTabBtn">Classes</button>
+            <button class="tab-btn" onclick="showTab('students')">Students</button>
+            <button class="tab-btn" onclick="showTab('faculty')" id="facultyTabBtn">Faculty</button>
+            <button class="tab-btn" onclick="showTab('subjects')" id="subjectsTabBtn">Subjects</button>
+            <button class="tab-btn" onclick="showTab('fees')">Fee Structure</button>
+            <button class="tab-btn" onclick="showTab('payments')">Fee Payments</button>
+            <button class="tab-btn" onclick="showTab('thresholds')">Grade Thresholds</button>
+            <button class="tab-btn" onclick="showTab('institution')">Institution Settings</button>
+        </div>
+
+        <!-- Classes Tab -->
+        <div id="classes" class="tab-content active">
+            <div class="card">
+                <h2>Manage Classes</h2>
+                <div id="classAlert"></div>
+                <button class="action-btn" onclick="openAddClassModal()">+ Add New Class</button>
+                <div id="classesData" class="loading">Loading...</div>
+            </div>
+        </div>
+
+        <!-- Students Tab -->
+        <div id="students" class="tab-content">
+            <div class="card">
+                <h2>Manage Students</h2>
+                <div id="studentAlert"></div>
+                <button class="action-btn" onclick="openAddStudentModal()">+ Add New Student</button>
+                <div id="studentsData" class="loading">Loading...</div>
+            </div>
+        </div>
+
+        <!-- Faculty Tab -->
+        <div id="faculty" class="tab-content">
+            <div class="card">
+                <h2>Manage Faculty</h2>
+                <div id="facultyAlert"></div>
+                <button class="action-btn" onclick="openAddFacultyModal()">+ Add New Faculty</button>
+                <div id="facultyData" class="loading">Loading...</div>
+            </div>
+        </div>
+
+        <!-- Subjects Tab -->
+        <div id="subjects" class="tab-content">
+            <div class="card">
+                <h2>Manage Subjects</h2>
+                <div id="subjectAlert"></div>
+                <button class="action-btn" onclick="openAddSubjectModal()">+ Add New Subject</button>
+                <div id="subjectsData" class="loading">Loading...</div>
+            </div>
+        </div>
+
+        <!-- Fee Structure Tab -->
+        <div id="fees" class="tab-content">
+            <div class="card">
+                <h2>Fee Structure Management</h2>
+                <div id="feeAlert"></div>
+                <button class="action-btn" onclick="openAddFeeModal()">+ Add Fee Structure</button>
+                <div id="feesData" class="loading">Loading...</div>
+            </div>
+        </div>
+
+        <!-- Fee Payments Tab -->
+        <div id="payments" class="tab-content">
+            <div class="card">
+                <h2>Record Fee Payment</h2>
+                <div id="paymentAlert"></div>
+                <button class="action-btn" onclick="openRecordPaymentModal()">+ Record Payment</button>
+                <div id="paymentsData">
+                    <p>Use the button above to record fee payments for students.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Grade Thresholds Tab -->
+        <div id="thresholds" class="tab-content">
+            <div class="card">
+                <h2>Grade Thresholds</h2>
+                <div id="thresholdAlert"></div>
+                <div id="thresholdsData" class="loading">Loading...</div>
+            </div>
+        </div>
+
+        <!-- Institution Settings Tab -->
+        <div id="institution" class="tab-content">
+            <div class="card">
+                <h2>Institution Settings</h2>
+                <div id="institutionAlert"></div>
+                <div class="form-group">
+                    <label>Institution Name</label>
+                    <input type="text" id="institutionName" placeholder="School Management System">
+                </div>
+                <div class="form-group">
+                    <label>Institution Type</label>
+                    <select id="institutionType">
+                        <option value="School">School</option>
+                        <option value="College">College</option>
+                        <option value="University">University</option>
+                    </select>
+                </div>
+                <button class="action-btn" onclick="saveInstitutionSettings()">Save Institution Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Class Modal -->
+    <div id="addClassModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add New Class</h3>
+                <button class="close-btn" onclick="closeModal('addClassModal')">&times;</button>
+            </div>
+            <form id="addClassForm">
+                <div class="form-group">
+                    <label>Class Name *</label>
+                    <input type="text" name="name" placeholder="e.g., Grade 10-A, BSc CS Year 1" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Class Type *</label>
+                        <select name="type" required>
+                            <option value="">Select Type</option>
+                            <option value="Primary">Primary (1-5)</option>
+                            <option value="Middle">Middle (6-8)</option>
+                            <option value="High">High School (9-12)</option>
+                            <option value="College">College/University</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Section</label>
+                        <input type="text" name="section" placeholder="A, B, C">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Grade/Year</label>
+                        <input type="text" name="grade" placeholder="Grade 10, Year 1">
+                    </div>
+                    <div class="form-group">
+                        <label>Capacity</label>
+                        <input type="number" name="capacity" value="30">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Room Number</label>
+                        <input type="text" name="room" placeholder="101, A-201">
+                    </div>
+                    <div class="form-group">
+                        <label>Academic Year</label>
+                        <input type="text" name="year" value="2024-25">
+                    </div>
+                </div>
+                <button type="submit" class="submit-btn">Add Class</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Student Modal -->
+    <div id="addStudentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add New Student</h3>
+                <button class="close-btn" onclick="closeModal('addStudentModal')">&times;</button>
+            </div>
+            <form id="addStudentForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>First Name *</label>
+                        <input type="text" name="firstName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Last Name *</label>
+                        <input type="text" name="lastName" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Email *</label>
+                    <input type="email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label>Password *</label>
+                    <input type="password" name="password" required>
+                </div>
+                <div class="form-group">
+                    <label>Assign to Class *</label>
+                    <select name="classId" id="studentClassSelect" required>
+                        <option value="">-- Select Class --</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Date of Birth</label>
+                        <input type="date" name="dob">
+                    </div>
+                    <div class="form-group">
+                        <label>Phone Number</label>
+                        <input type="text" name="phone">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Address</label>
+                    <input type="text" name="address">
+                </div>
+                <button type="submit" class="submit-btn">Add Student</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Faculty Modal -->
+    <div id="addFacultyModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add New Faculty</h3>
+                <button class="close-btn" onclick="closeModal('addFacultyModal')">&times;</button>
+            </div>
+            <form id="addFacultyForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>First Name *</label>
+                        <input type="text" name="firstName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Last Name *</label>
+                        <input type="text" name="lastName" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Email *</label>
+                    <input type="email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label>Password *</label>
+                    <input type="password" name="password" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Phone Number</label>
+                        <input type="text" name="phone">
+                    </div>
+                    <div class="form-group">
+                        <label>Department</label>
+                        <input type="text" name="department" placeholder="Mathematics, Science">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Qualification</label>
+                    <input type="text" name="qualification" placeholder="PhD, MSc, etc.">
+                </div>
+                <button type="submit" class="submit-btn">Add Faculty</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Subject Modal -->
+    <div id="addSubjectModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add New Subject</h3>
+                <button class="close-btn" onclick="closeModal('addSubjectModal')">&times;</button>
+            </div>
+            <form id="addSubjectForm">
+                <div class="form-group">
+                    <label>Subject Name *</label>
+                    <input type="text" name="name" placeholder="e.g., Mathematics, Physics" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Subject Code *</label>
+                        <input type="text" name="code" placeholder="e.g., MATH101" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Credits *</label>
+                        <input type="number" name="credits" value="3" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Assign to Class *</label>
+                    <select name="classId" id="subjectClassSelect" required>
+                        <option value="">-- Select Class --</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Subject Type *</label>
+                    <select name="type" required>
+                        <option value="">Select Type</option>
+                        <option value="Core">Core</option>
+                        <option value="Elective">Elective</option>
+                        <option value="Practical">Practical</option>
+                        <option value="Theory">Theory</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Assign Faculty (Optional)</label>
+                    <select name="facultyId" id="subjectFacultySelect">
+                        <option value="">-- Select Faculty --</option>
+                    </select>
+                </div>
+                <button type="submit" class="submit-btn">Add Subject</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Fee Structure Modal -->
+    <div id="addFeeModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add Fee Structure</h3>
+                <button class="close-btn" onclick="closeModal('addFeeModal')">&times;</button>
+            </div>
+            <form id="addFeeForm">
+                <div class="form-group">
+                    <label>Select Class *</label>
+                    <select name="classId" id="feeClassSelect" required>
+                        <option value="">-- Select Class --</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Fee Name *</label>
+                    <input type="text" name="feeName" placeholder="e.g., Tuition Fee, Lab Fee" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Amount *</label>
+                        <input type="number" step="0.01" name="amount" placeholder="5000.00" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Fee Type *</label>
+                        <select name="feeType" required>
+                            <option value="">Select Type</option>
+                            <option value="Tuition">Tuition</option>
+                            <option value="Lab">Lab</option>
+                            <option value="Library">Library</option>
+                            <option value="Sports">Sports</option>
+                            <option value="Transport">Transport</option>
+                            <option value="Hostel">Hostel</option>
+                            <option value="Exam">Exam</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Frequency *</label>
+                        <select name="frequency" required>
+                            <option value="">Select Frequency</option>
+                            <option value="One-time">One-time</option>
+                            <option value="Monthly">Monthly</option>
+                            <option value="Quarterly">Quarterly</option>
+                            <option value="Semester">Semester</option>
+                            <option value="Annual">Annual</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Due Date</label>
+                        <input type="date" name="dueDate">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Academic Year *</label>
+                    <input type="text" name="year" value="2024-25" required>
+                </div>
+                <button type="submit" class="submit-btn">Add Fee Structure</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Record Payment Modal -->
+    <div id="recordPaymentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Record Fee Payment</h3>
+                <button class="close-btn" onclick="closeModal('recordPaymentModal')">&times;</button>
+            </div>
+            <form id="recordPaymentForm">
+                <div class="form-group">
+                    <label>Student ID *</label>
+                    <input type="number" name="studentId" placeholder="Enter Student ID" required>
+                </div>
+                <div class="form-group">
+                    <label>Fee Structure ID *</label>
+                    <input type="number" name="feeStructureId" placeholder="Enter Fee Structure ID" required>
+                </div>
+                <div class="form-group">
+                    <label>Amount Paid *</label>
+                    <input type="number" step="0.01" name="amount" placeholder="5000.00" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Payment Method *</label>
+                        <select name="method" required>
+                            <option value="">Select Method</option>
+                            <option value="Cash">Cash</option>
+                            <option value="Card">Card</option>
+                            <option value="Bank Transfer">Bank Transfer</option>
+                            <option value="Cheque">Cheque</option>
+                            <option value="Online">Online</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Payment Date</label>
+                        <input type="date" name="date">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Transaction ID (Optional)</label>
+                    <input type="text" name="transactionId" placeholder="TXN123456">
+                </div>
+                <div class="form-group">
+                    <label>Remarks</label>
+                    <input type="text" name="remarks" placeholder="Any additional notes">
+                </div>
+                <button type="submit" class="submit-btn">Record Payment</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Student Credentials Modal -->
+    <div id="editStudentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Student Credentials</h3>
+                <button class="close-btn" onclick="closeModal('editStudentModal')">&times;</button>
+            </div>
+            <div>
+                <input type="hidden" id="editStudentId">
+                <div class="form-group">
+                    <label>First Name *</label>
+                    <input type="text" id="editStudentFirstName" placeholder="First Name" required>
+                </div>
+                <div class="form-group">
+                    <label>Last Name *</label>
+                    <input type="text" id="editStudentLastName" placeholder="Last Name" required>
+                </div>
+                <div class="form-group">
+                    <label>Email *</label>
+                    <input type="email" id="editStudentEmail" placeholder="Email" required>
+                </div>
+                <div class="form-group">
+                    <label>Password (leave empty to keep current)</label>
+                    <input type="password" id="editStudentPassword" placeholder="New password">
+                </div>
+                <button onclick="saveStudentCredentials()" class="submit-btn">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Faculty Credentials Modal -->
+    <div id="editFacultyModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Faculty Credentials</h3>
+                <button class="close-btn" onclick="closeModal('editFacultyModal')">&times;</button>
+            </div>
+            <div>
+                <input type="hidden" id="editFacultyId">
+                <div class="form-group">
+                    <label>First Name *</label>
+                    <input type="text" id="editFacultyFirstName" placeholder="First Name" required>
+                </div>
+                <div class="form-group">
+                    <label>Last Name *</label>
+                    <input type="text" id="editFacultyLastName" placeholder="Last Name" required>
+                </div>
+                <div class="form-group">
+                    <label>Email *</label>
+                    <input type="email" id="editFacultyEmail" placeholder="Email" required>
+                </div>
+                <div class="form-group">
+                    <label>Password (leave empty to keep current)</label>
+                    <input type="password" id="editFacultyPassword" placeholder="New password">
+                </div>
+                <button onclick="saveFacultyCredentials()" class="submit-btn">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/admin.js"></script>
+    <script>
+        let classesLoaded = false;
+        let studentsLoaded = false;
+        let facultyLoaded = false;
+        let subjectsLoaded = false;
+        let feesLoaded = false;
+        let institutionLoaded = false;
+
+        async function loadDashboardStats() {
+            try {
+                const res = await fetch('/api/dashboard/stats');
+                const result = await res.json();
+                if (result.success && result.data) {
+                    const data = result.data;
+                    document.getElementById('totalStudents').textContent = data.totalStudents || 0;
+                    document.getElementById('totalFaculty').textContent = data.totalFaculty || 0;
+                    document.getElementById('totalClasses').textContent = data.totalClasses || 0;
+                    document.getElementById('totalSubjects').textContent = data.totalSubjects || 0;
+                    document.getElementById('collectedFees').textContent = '$' + (data.feesCollectedThisMonth || 0).toFixed(2);
+                }
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+
+            if (tabName === 'classes' && !classesLoaded) {
+                loadClasses();
+            } else if (tabName === 'students' && !studentsLoaded) {
+                loadStudents();
+            } else if (tabName === 'faculty' && !facultyLoaded) {
+                loadFaculty();
+            } else if (tabName === 'subjects' && !subjectsLoaded) {
+                loadSubjects();
+            } else if (tabName === 'fees' && !feesLoaded) {
+                loadFees();
+            } else if (tabName === 'thresholds') {
+                loadThresholds();
+            } else if (tabName === 'institution' && !institutionLoaded) {
+                loadInstitutionSettings();
+            }
+        }
+
+        function applyInstitutionLabels(institutionType, institutionName) {
+            const category = institutionType === 'University' ? 'University' : institutionType === 'College' ? 'College' : 'School';
+            document.getElementById('adminPortalTitle').textContent = `👨‍💼 ${category} Admin Dashboard`;
+
+            const classesTab = document.getElementById('classesTabBtn');
+            const facultyTab = document.getElementById('facultyTabBtn');
+            const subjectsTab = document.getElementById('subjectsTabBtn');
+
+            if (classesTab) classesTab.textContent = institutionType === 'University' ? 'Programs' : 'Classes';
+            if (facultyTab) facultyTab.textContent = institutionType === 'University' ? 'Instructors' : 'Faculty';
+            if (subjectsTab) subjectsTab.textContent = institutionType === 'School' ? 'Subjects' : 'Courses';
+
+            if (institutionName) {
+                document.title = `${institutionName} - Admin Dashboard`;
+            }
+        }
+
+        async function loadInstitutionSettings() {
+            try {
+                const response = await fetch('/api/config/institution');
+                const result = await response.json();
+                if (result.success && result.data) {
+                    document.getElementById('institutionName').value = result.data.institutionName || 'School Management System';
+                    document.getElementById('institutionType').value = result.data.institutionType || 'School';
+                    applyInstitutionLabels(result.data.institutionType || 'School', result.data.institutionName || 'School Management System');
+                    institutionLoaded = true;
+                }
+            } catch (error) {
+                document.getElementById('institutionAlert').innerHTML = '<div class="alert alert-error">Could not load institution settings.</div>';
+            }
+        }
+
+        async function saveInstitutionSettings() {
+            const institutionName = document.getElementById('institutionName').value.trim();
+            const institutionType = document.getElementById('institutionType').value;
+
+            try {
+                const response = await fetch('/api/config/institution', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ institutionName, institutionType })
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    document.getElementById('institutionAlert').innerHTML = '<div class="alert alert-success">Institution settings saved.</div>';
+                    applyInstitutionLabels(institutionType, institutionName);
+                } else {
+                    document.getElementById('institutionAlert').innerHTML = '<div class="alert alert-error">Error: ' + (result.message || 'Failed to save') + '</div>';
+                }
+            } catch (error) {
+                document.getElementById('institutionAlert').innerHTML = '<div class="alert alert-error">Error saving institution settings.</div>';
+            }
+        }
+
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/admin/stats');
+                const result = await response.json();
+                
+                if (result.success) {
+                    document.getElementById('totalStudents').textContent = result.data.students;
+                    document.getElementById('totalFaculty').textContent = result.data.faculty;
+                    document.getElementById('totalClasses').textContent = result.data.classes;
+                    document.getElementById('totalSubjects').textContent = result.data.subjects;
+                    document.getElementById('totalFees').textContent = '₨' + result.data.totalFees.toLocaleString();
+                    document.getElementById('collectedFees').textContent = '₨' + result.data.collectedFees.toLocaleString();
+                }
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        async function loadClasses() {
+            try {
+                const response = await fetch('/api/admin/classes');
+                const result = await response.json();
+                
+                if (result.success) {
+                    const classes = result.data;
+                    
+                    // Populate class selects in other modals
+                    let selectHtml = '<option value="">-- Select Class --</option>';
+                    classes.forEach(cls => {
+                        selectHtml += `<option value="${cls.id}">${cls.name}</option>`;
+                    });
+                    document.getElementById('studentClassSelect').innerHTML = selectHtml;
+                    document.getElementById('subjectClassSelect').innerHTML = selectHtml;
+                    document.getElementById('feeClassSelect').innerHTML = selectHtml;
+                    
+                    if (classes.length === 0) {
+                        document.getElementById('classesData').innerHTML = '<p>No classes found.</p>';
+                    } else {
+                        let html = `
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Class Name</th>
+                                        <th>Type</th>
+                                        <th>Section</th>
+                                        <th>Room</th>
+                                        <th>Capacity</th>
+                                        <th>Students</th>
+                                        <th>Class Teacher</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                        `;
+                        
+                        classes.forEach(cls => {
+                            let badge = 'badge-primary';
+                            if (cls.type === 'Middle') badge = 'badge-middle';
+                            if (cls.type === 'High') badge = 'badge-high';
+                            if (cls.type === 'College') badge = 'badge-college';
+                            
+                            html += `
+                                <tr>
+                                    <td>${cls.id}</td>
+                                    <td><strong>${cls.name}</strong></td>
+                                    <td><span class="badge ${badge}">${cls.type}</span></td>
+                                    <td>${cls.section || 'N/A'}</td>
+                                    <td>${cls.room || 'N/A'}</td>
+                                    <td>${cls.studentCount} / ${cls.capacity}</td>
+                                    <td>${cls.studentCount}</td>
+                                    <td>${cls.subjectCount} subjects</td>
+                                </tr>
+                            `;
+                        });
+                        
+                        html += '</tbody></table>';
+                        document.getElementById('classesData').innerHTML = html;
+                    }
+                    classesLoaded = true;
+                }
+            } catch (error) {
+                document.getElementById('classesData').innerHTML = '<p>Error loading classes</p>';
+            }
+        }
+
+        async function loadStudents() {
+            try {
+                const response = await fetch('/api/admin/students');
+                const result = await response.json();
+                
+                if (result.success) {
+                    const students = result.data;
+                    if (students.length === 0) {
+                        document.getElementById('studentsData').innerHTML = '<p>No students found.</p>';
+                    } else {
+                        let html = `
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Class</th>
+                                        <th>Enrollment Date</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                        `;
+                        
+                        students.forEach(student => {
+                            html += `
+                                <tr>
+                                    <td>${student.id}</td>
+                                    <td>${student.firstName} ${student.lastName}</td>
+                                    <td>${student.email}</td>
+                                    <td>${student.class}</td>
+                                    <td>${student.enrollmentDate || 'N/A'}</td>
+                                    <td><button class="action-btn" onclick="openEditStudentModal(${student.id}, '${student.email}', '${student.firstName}', '${student.lastName}')" style="padding: 6px 12px; font-size: 12px;">Edit Credentials</button></td>
+                                </tr>
+                            `;
+                        });
+                        
+                        html += '</tbody></table>';
+                        document.getElementById('studentsData').innerHTML = html;
+                    }
+                    studentsLoaded = true;
+                }
+            } catch (error) {
+                document.getElementById('studentsData').innerHTML = '<p>Error loading students</p>';
+            }
+        }
+
+        async function loadFaculty() {
+            document.getElementById('facultyData').innerHTML = '<div class="loading">Loading...</div>';
+            
+            try {
+                const response = await fetch('/api/admin/faculty');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    const faculty = result.data;
+                    
+                    // Populate faculty selects
+                    let selectHtml = '<option value="">-- Select Faculty --</option>';
+                    faculty.forEach(f => {
+                        selectHtml += `<option value="${f.id}">Prof. ${f.firstName} ${f.lastName}</option>`;
+                    });
+                    document.getElementById('subjectFacultySelect').innerHTML = selectHtml;
+                    
+                    if (faculty.length === 0) {
+                        document.getElementById('facultyData').innerHTML = '<p>No faculty found.</p>';
+                    } else {
+                        let html = `
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Department</th>
+                                        <th>Joining Date</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                        `;
+                        
+                        faculty.forEach(f => {
+                            html += `
+                                <tr>
+                                    <td>${f.id}</td>
+                                    <td>Prof. ${f.firstName} ${f.lastName}</td>
+                                    <td>${f.email}</td>
+                                    <td>${f.department || 'N/A'}</td>
+                                    <td>${f.joiningDate || 'N/A'}</td>
+                                    <td><button class="action-btn" onclick="openEditFacultyModal(${f.id}, '${f.email}', '${f.firstName}', '${f.lastName}')" style="padding: 6px 12px; font-size: 12px;">Edit Credentials</button></td>
+                                </tr>
+                            `;
+                        });
+                        
+                        html += '</tbody></table>';
+                        document.getElementById('facultyData').innerHTML = html;
+                    }
+                    facultyLoaded = true;
+                } else {
+                    document.getElementById('facultyData').innerHTML = `
+                        <div class="info-box" style="border-left-color: #dc3545;">
+                            <h3>⚠️ Error</h3>
+                            <p>${result.message || 'Failed to load faculty'}</p>
+                            <button class="action-btn" onclick="loadFaculty()" style="margin-top: 15px;">🔄 Retry</button>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading faculty:', error);
+                document.getElementById('facultyData').innerHTML = `
+                    <div class="info-box" style="border-left-color: #dc3545;">
+                        <h3>⚠️ Connection Error</h3>
+                        <p>Could not load faculty data. Error: ${error.message}</p>
+                        <button class="action-btn" onclick="loadFaculty()" style="margin-top: 15px;">🔄 Retry</button>
+                    </div>
+                `;
+            }
+        }
+
+        async function loadSubjects() {
+            try {
+                const response = await fetch('/api/admin/subjects');
+                const result = await response.json();
+                
+                if (result.success) {
+                    const subjects = result.data;
+                    if (subjects.length === 0) {
+                        document.getElementById('subjectsData').innerHTML = '<p>No subjects found.</p>';
+                    } else {
+                        let html = `
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Subject Name</th>
+                                        <th>Code</th>
+                                        <th>Class</th>
+                                        <th>Faculty</th>
+                                        <th>Credits</th>
+                                        <th>Type</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                        `;
+                        
+                        subjects.forEach(subject => {
+                            html += `
+                                <tr>
+                                    <td>${subject.id}</td>
+                                    <td>${subject.name}</td>
+                                    <td>${subject.code}</td>
+                                    <td>${subject.class}</td>
+                                    <td>${subject.faculty}</td>
+                                    <td>${subject.credits}</td>
+                                    <td>${subject.type}</td>
+                                </tr>
+                            `;
+                        });
+                        
+                        html += '</tbody></table>';
+                        document.getElementById('subjectsData').innerHTML = html;
+                    }
+                    subjectsLoaded = true;
+                }
+            } catch (error) {
+                document.getElementById('subjectsData').innerHTML = '<p>Error loading subjects</p>';
+            }
+        }
+
+        async function loadFees() {
+            try {
+                const response = await fetch('/api/admin/fee-structures');
+                const result = await response.json();
+                
+                if (result.success) {
+                    const fees = result.data;
+                    if (fees.length === 0) {
+                        document.getElementById('feesData').innerHTML = '<p>No fee structures found.</p>';
+                    } else {
+                        let html = `
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Class</th>
+                                        <th>Fee Name</th>
+                                        <th>Amount</th>
+                                        <th>Type</th>
+                                        <th>Frequency</th>
+                                        <th>Due Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                        `;
+                        
+                        fees.forEach(fee => {
+                            html += `
+                                <tr>
+                                    <td>${fee.id}</td>
+                                    <td>${fee.className}</td>
+                                    <td>${fee.feeName}</td>
+                                    <td>${fee.amount.toFixed(2)}</td>
+                                    <td>${fee.type}</td>
+                                    <td>${fee.frequency}</td>
+                                    <td>${fee.dueDate || 'N/A'}</td>
+                                </tr>
+                            `;
+                        });
+                        
+                        html += '</tbody></table>';
+                        document.getElementById('feesData').innerHTML = html;
+                    }
+                    feesLoaded = true;
+                }
+            } catch (error) {
+                document.getElementById('feesData').innerHTML = '<p>Error loading fee structures</p>';
+            }
+        }
+
+        function openAddClassModal() {
+            document.getElementById('addClassModal').classList.add('active');
+        }
+
+        function openAddStudentModal() {
+            if (!classesLoaded) loadClasses();
+            document.getElementById('addStudentModal').classList.add('active');
+        }
+
+        function openAddFacultyModal() {
+            document.getElementById('addFacultyModal').classList.add('active');
+        }
+
+        function openAddSubjectModal() {
+            if (!classesLoaded) loadClasses();
+            if (!facultyLoaded) loadFaculty();
+            document.getElementById('addSubjectModal').classList.add('active');
+        }
+
+        function openAddFeeModal() {
+            if (!classesLoaded) loadClasses();
+            document.getElementById('addFeeModal').classList.add('active');
+        }
+
+        function openRecordPaymentModal() {
+            document.getElementById('recordPaymentModal').classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        // Form submissions
+        document.getElementById('addClassForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData);
+
+            try {
+                const response = await fetch('/api/admin/classes', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    document.getElementById('classAlert').innerHTML = '<div class="alert alert-success">Class added successfully!</div>';
+                    closeModal('addClassModal');
+                    e.target.reset();
+                    loadClasses();
+                    loadStats();
+                } else {
+                    document.getElementById('classAlert').innerHTML = '<div class="alert alert-error">Error: ' + result.message + '</div>';
+                }
+            } catch (error) {
+                document.getElementById('classAlert').innerHTML = '<div class="alert alert-error">Error adding class</div>';
+            }
+        });
+
+        document.getElementById('addStudentForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData);
+
+            try {
+                const response = await fetch('/api/admin/students', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    document.getElementById('studentAlert').innerHTML = '<div class="alert alert-success">Student added successfully!</div>';
+                    closeModal('addStudentModal');
+                    e.target.reset();
+                    loadStudents();
+                    loadStats();
+                } else {
+                    document.getElementById('studentAlert').innerHTML = '<div class="alert alert-error">Error: ' + result.message + '</div>';
+                }
+            } catch (error) {
+                document.getElementById('studentAlert').innerHTML = '<div class="alert alert-error">Error adding student</div>';
+            }
+        });
+
+        document.getElementById('addFacultyForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData);
+
+            try {
+                const response = await fetch('/api/admin/faculty', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    document.getElementById('facultyAlert').innerHTML = '<div class="alert alert-success">Faculty added successfully!</div>';
+                    closeModal('addFacultyModal');
+                    e.target.reset();
+                    loadFaculty();
+                    loadStats();
+                } else {
+                    document.getElementById('facultyAlert').innerHTML = '<div class="alert alert-error">Error: ' + result.message + '</div>';
+                }
+            } catch (error) {
+                document.getElementById('facultyAlert').innerHTML = '<div class="alert alert-error">Error adding faculty</div>';
+            }
+        });
+
+        document.getElementById('addSubjectForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData);
+            if (!data.facultyId) delete data.facultyId;
+
+            try {
+                const response = await fetch('/api/admin/subjects', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    document.getElementById('subjectAlert').innerHTML = '<div class="alert alert-success">Subject added successfully!</div>';
+                    closeModal('addSubjectModal');
+                    e.target.reset();
+                    loadSubjects();
+                    loadStats();
+                } else {
+                    document.getElementById('subjectAlert').innerHTML = '<div class="alert alert-error">Error: ' + result.message + '</div>';
+                }
+            } catch (error) {
+                document.getElementById('subjectAlert').innerHTML = '<div class="alert alert-error">Error adding subject</div>';
+            }
+        });
+
+        document.getElementById('addFeeForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData);
+
+            try {
+                const response = await fetch('/api/admin/fee-structures', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    document.getElementById('feeAlert').innerHTML = '<div class="alert alert-success">Fee structure added successfully!</div>';
+                    closeModal('addFeeModal');
+                    e.target.reset();
+                    loadFees();
+                    loadStats();
+                } else {
+                    document.getElementById('feeAlert').innerHTML = '<div class="alert alert-error">Error: ' + result.message + '</div>';
+                }
+            } catch (error) {
+                document.getElementById('feeAlert').innerHTML = '<div class="alert alert-error">Error adding fee structure</div>';
+            }
+        });
+
+        document.getElementById('recordPaymentForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData);
+
+            try {
+                const response = await fetch('/api/admin/fee-payments', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    document.getElementById('paymentAlert').innerHTML = '<div class="alert alert-success">Payment recorded! Receipt: ' + result.receiptNumber + '</div>';
+                    closeModal('recordPaymentModal');
+                    e.target.reset();
+                    loadStats();
+                } else {
+                    document.getElementById('paymentAlert').innerHTML = '<div class="alert alert-error">Error: ' + result.message + '</div>';
+                }
+            } catch (error) {
+                document.getElementById('paymentAlert').innerHTML = '<div class="alert alert-error">Error recording payment</div>';
+            }
+        });
+
+        // Load initial data
+        loadStats();
+        loadClasses();
+        
+        // Define and call loadInstitutionContext (calls loadInstitutionSettings)
+        async function loadInstitutionContext() {
+            try {
+                const response = await fetch('/api/config/institution');
+                const result = await response.json();
+                if (result.success && result.data) {
+                    applyInstitutionLabels(result.data.institutionType || 'School', result.data.institutionName || 'School Management System');
+                }
+            } catch (error) {
+                console.error('Error loading institution context:', error);
+            }
+        }
+        
+        loadInstitutionContext();
+        async function loadThresholds() {
+            try {
+                const response = await fetch('/api/config/grade-thresholds');
+                const result = await response.json();
+                if (result.success) {
+                    const thresholds = result.thresholds || [];
+                    let html = '<div id="thresholdAlert"></div>';
+                    html += '<table style="margin-top: 20px;"><thead><tr><th>Letter</th><th>Min %</th><th>Action</th></tr></thead><tbody>';
+                    thresholds.forEach((t, idx) => {
+                        html += `<tr><td><input type="text" value="${t.letter}" data-index="${idx}" class="thr-letter" style="width:50px;" /></td><td><input type="number" value="${t.minPercent}" data-index="${idx}" class="thr-percent" step="0.01" style="width:80px;" /></td><td><button class="action-btn" onclick="deleteThreshold(${idx})" style="padding:4px 8px;">Delete</button></td></tr>`;
+                    });
+                    html += '</tbody></table>';
+                    html += '<button class="action-btn" onclick="addThreshold()" style="margin-top:15px;">+ Add</button>';
+                    html += '<button class="action-btn" onclick="saveThresholds()" style="margin-top:15px; margin-left:10px;">Save</button>';
+                    document.getElementById('thresholdsData').innerHTML = html;
+                } else {
+                    // silently show empty state when thresholds cannot be loaded
+                    document.getElementById('thresholdsData').innerHTML = '<p>No thresholds configured.</p>';
+                }
+            } catch (e) {
+                // suppress error display to avoid alarming non-admin users
+                document.getElementById('thresholdsData').innerHTML = '<p>No thresholds configured.</p>';
+            }
+        }
+
+        function addThreshold() {
+            const tbody = document.querySelector('#thresholdsData table tbody');
+            const newIdx = tbody.children.length;
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td><input type="text" value="X" data-index="${newIdx}" class="thr-letter" style="width:50px;" /></td><td><input type="number" value="0" data-index="${newIdx}" class="thr-percent" step="0.01" style="width:80px;" /></td><td><button class="action-btn" onclick="deleteThreshold(${newIdx})" style="padding:4px 8px;">Delete</button></td>`;
+            tbody.appendChild(tr);
+        }
+
+        function deleteThreshold(idx) {
+            const rows = document.querySelectorAll('#thresholdsData table tbody tr');
+            if (rows[idx]) rows[idx].remove();
+        }
+
+        async function saveThresholds() {
+            const letters = document.querySelectorAll('.thr-letter');
+            const percents = document.querySelectorAll('.thr-percent');
+            const thresholds = [];
+            for (let i = 0; i < letters.length; i++) {
+                thresholds.push({ letter: letters[i].value.trim(), minPercent: parseFloat(percents[i].value) || 0 });
+            }
+            try {
+                const res = await fetch('/api/config/grade-thresholds', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ thresholds: thresholds })
+                });
+                const result = await res.json();
+                const alertDiv = document.getElementById('thresholdAlert');
+                if (result.success) {
+                    alertDiv.innerHTML = '<div class="alert alert-success">Grade thresholds saved successfully!</div>';
+                    loadThresholds();
+                } else {
+                    alertDiv.innerHTML = '<div class="alert alert-error">Error: ' + result.message + '</div>';
+                }
+            } catch (e) {
+                document.getElementById('thresholdAlert').innerHTML = '<div class="alert alert-error">Error saving thresholds</div>';
+            }
+        }
+
+        // Student Credentials Functions
+        function openEditStudentModal(id, email, firstName, lastName) {
+            document.getElementById('editStudentId').value = id;
+            document.getElementById('editStudentEmail').value = email;
+            document.getElementById('editStudentPassword').value = '';
+            document.getElementById('editStudentFirstName').value = firstName;
+            document.getElementById('editStudentLastName').value = lastName;
+            openModal('editStudentModal');
+        }
+
+        async function saveStudentCredentials() {
+            const id = document.getElementById('editStudentId').value;
+            const email = document.getElementById('editStudentEmail').value;
+            const password = document.getElementById('editStudentPassword').value;
+            const firstName = document.getElementById('editStudentFirstName').value;
+            const lastName = document.getElementById('editStudentLastName').value;
+
+            if (!email || !firstName || !lastName) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/admin/student/${id}/credentials`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password, firstName, lastName })
+                });
+                const result = await res.json();
+                if (result.success) {
+                    alert('Student credentials updated successfully');
+                    closeModal('editStudentModal');
+                    loadStudents();
+                } else {
+                    alert('Error: ' + result.message);
+                }
+            } catch (e) {
+                alert('Error updating student credentials');
+            }
+        }
+
+        // Faculty Credentials Functions
+        function openEditFacultyModal(id, email, firstName, lastName) {
+            document.getElementById('editFacultyId').value = id;
+            document.getElementById('editFacultyEmail').value = email;
+            document.getElementById('editFacultyPassword').value = '';
+            document.getElementById('editFacultyFirstName').value = firstName;
+            document.getElementById('editFacultyLastName').value = lastName;
+            openModal('editFacultyModal');
+        }
+
+        async function saveFacultyCredentials() {
+            const id = document.getElementById('editFacultyId').value;
+            const email = document.getElementById('editFacultyEmail').value;
+            const password = document.getElementById('editFacultyPassword').value;
+            const firstName = document.getElementById('editFacultyFirstName').value;
+            const lastName = document.getElementById('editFacultyLastName').value;
+
+            if (!email || !firstName || !lastName) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/admin/faculty/${id}/credentials`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password, firstName, lastName })
+                });
+                const result = await res.json();
+                if (result.success) {
+                    alert('Faculty credentials updated successfully');
+                    closeModal('editFacultyModal');
+                    loadFaculty();
+                } else {
+                    alert('Error: ' + result.message);
+                }
+            } catch (e) {
+                alert('Error updating faculty credentials');
+            }
+        }
+
+        // Initialize on page load
+        loadDashboardStats();
+        loadInstitutionContext();
+    </script>
+</body>
+</html>

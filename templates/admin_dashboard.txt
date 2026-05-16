@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .navbar h1 {
+            font-size: 24px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: white;
+            color: #4facfe;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .stat-icon {
+            font-size: 40px;
+            width: 70px;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 15px;
+        }
+
+        .stat-icon.students { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .stat-icon.faculty { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+        .stat-icon.courses { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+        .stat-icon.enrollments { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+
+        .stat-info h3 {
+            font-size: 32px;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .stat-info p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 12px 24px;
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            color: #666;
+        }
+
+        .tab-btn:hover {
+            border-color: #4facfe;
+            color: #4facfe;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border-color: transparent;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+
+        .card h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 22px;
+        }
+
+        .action-btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            margin-bottom: 20px;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(79, 172, 254, 0.4);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table th {
+            background: #f8f9fa;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #666;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        table td {
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+            color: #333;
+        }
+
+        table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h3 {
+            color: #333;
+            font-size: 20px;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #4facfe;
+            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .alert {
+            padding: 12px 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <h1>👨‍💼 Admin Dashboard</h1>
+        <div class="user-info">
+            <span>{{ user_name }}</span>
+            <button class="logout-btn" onclick="window.location.href='/logout'">Logout</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Statistics Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon students">👨‍🎓</div>
+                <div class="stat-info">
+                    <h3 id="totalStudents">0</h3>
+                    <p>Total Students</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon faculty">👨‍🏫</div>
+                <div class="stat-info">
+                    <h3 id="totalFaculty">0</h3>
+                    <p>Total Faculty</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon courses">📚</div>
+                <div class="stat-info">
+                    <h3 id="totalCourses">0</h3>
+                    <p>Total Courses</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon enrollments">📝</div>
+                <div class="stat-info">
+                    <h3 id="totalEnrollments">0</h3>
+                    <p>Total Enrollments</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="showTab('students')">Students</button>
+            <button class="tab-btn" onclick="showTab('faculty')">Faculty</button>
+            <button class="tab-btn" onclick="showTab('courses')">Courses</button>
+        </div>
+
+        <!-- Students Tab -->
+        <div id="students" class="tab-content active">
+            <div class="card">
+                <h2>Manage Students</h2>
+                <div id="studentAlert"></div>
+                <button class="action-btn" onclick="openAddStudentModal()">+ Add New Student</button>
+                <div id="studentsData" class="loading">Loading...</div>
+            </div>
+        </div>
+
+        <!-- Faculty Tab -->
+        <div id="faculty" class="tab-content">
+            <div class="card">
+                <h2>Manage Faculty</h2>
+                <div id="facultyAlert"></div>
+                <button class="action-btn" onclick="openAddFacultyModal()">+ Add New Faculty</button>
+                <div id="facultyData" class="loading">Loading...</div>
+            </div>
+        </div>
+
+        <!-- Courses Tab -->
+        <div id="courses" class="tab-content">
+            <div class="card">
+                <h2>Manage Courses</h2>
+                <div id="courseAlert"></div>
+                <button class="action-btn" onclick="openAddCourseModal()">+ Add New Course</button>
+                <div id="coursesData" class="loading">Loading...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Student Modal -->
+    <div id="addStudentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add New Student</h3>
+                <button class="close-btn" onclick="closeModal('addStudentModal')">&times;</button>
+            </div>
+            <form id="addStudentForm">
+                <div class="form-group">
+                    <label>First Name *</label>
+                    <input type="text" name="firstName" required>
+                </div>
+                <div class="form-group">
+                    <label>Last Name *</label>
+                    <input type="text" name="lastName" required>
+                </div>
+                <div class="form-group">
+                    <label>Email *</label>
+                    <input type="email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label>Password *</label>
+                    <input type="password" name="password" required>
+                </div>
+                <div class="form-group">
+                    <label>Date of Birth</label>
+                    <input type="date" name="dob">
+                </div>
+                <div class="form-group">
+                    <label>Phone Number</label>
+                    <input type="text" name="phone">
+                </div>
+                <div class="form-group">
+                    <label>Address</label>
+                    <input type="text" name="address">
+                </div>
+                <div class="form-group">
+                    <label>Class</label>
+                    <input type="text" name="class">
+                </div>
+                <button type="submit" class="submit-btn">Add Student</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Faculty Modal -->
+    <div id="addFacultyModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add New Faculty</h3>
+                <button class="close-btn" onclick="closeModal('addFacultyModal')">&times;</button>
+            </div>
+            <form id="addFacultyForm">
+                <div class="form-group">
+                    <label>First Name *</label>
+                    <input type="text" name="firstName" required>
+                </div>
+                <div class="form-group">
+                    <label>Last Name *</label>
+                    <input type="text" name="lastName" required>
+                </div>
+                <div class="form-group">
+                    <label>Email *</label>
+                    <input type="email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label>Password *</label>
+                    <input type="password" name="password" required>
+                </div>
+                <div class="form-group">
+                    <label>Phone Number</label>
+                    <input type="text" name="phone">
+                </div>
+                <div class="form-group">
+                    <label>Department</label>
+                    <input type="text" name="department">
+                </div>
+                <div class="form-group">
+                    <label>Qualification</label>
+                    <input type="text" name="qualification">
+                </div>
+                <button type="submit" class="submit-btn">Add Faculty</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Course Modal -->
+    <div id="addCourseModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add New Course</h3>
+                <button class="close-btn" onclick="closeModal('addCourseModal')">&times;</button>
+            </div>
+            <form id="addCourseForm">
+                <div class="form-group">
+                    <label>Course Name *</label>
+                    <input type="text" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label>Course Code *</label>
+                    <input type="text" name="code" required>
+                </div>
+                <div class="form-group">
+                    <label>Credits *</label>
+                    <input type="number" name="credits" required>
+                </div>
+                <div class="form-group">
+                    <label>Assign Faculty (Optional)</label>
+                    <select name="facultyId" id="facultySelect">
+                        <option value="">-- Not Assigned --</option>
+                    </select>
+                </div>
+                <button type="submit" class="submit-btn">Add Course</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let studentsLoaded = false;
+        let facultyLoaded = false;
+        let coursesLoaded = false;
+
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+
+            if (tabName === 'students' && !studentsLoaded) {
+                loadStudents();
+            } else if (tabName === 'faculty' && !facultyLoaded) {
+                loadFaculty();
+            } else if (tabName === 'courses' && !coursesLoaded) {
+                loadCourses();
+            }
+        }
+
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/admin/stats');
+                const result = await response.json();
+                
+                if (result.success) {
+                    document.getElementById('totalStudents').textContent = result.data.students;
+                    document.getElementById('totalFaculty').textContent = result.data.faculty;
+                    document.getElementById('totalCourses').textContent = result.data.courses;
+                    document.getElementById('totalEnrollments').textContent = result.data.enrollments;
+                }
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        async function loadStudents() {
+            try {
+                const response = await fetch('/api/admin/students');
+                const result = await response.json();
+                
+                if (result.success) {
+                    const students = result.data;
+                    if (students.length === 0) {
+                        document.getElementById('studentsData').innerHTML = '<p>No students found.</p>';
+                    } else {
+                        let html = `
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Class</th>
+                                        <th>Enrollment Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                        `;
+                        
+                        students.forEach(student => {
+                            html += `
+                                <tr>
+                                    <td>${student.id}</td>
+                                    <td>${student.firstName} ${student.lastName}</td>
+                                    <td>${student.email}</td>
+                                    <td>${student.class || 'N/A'}</td>
+                                    <td>${student.enrollmentDate || 'N/A'}</td>
+                                </tr>
+                            `;
+                        });
+                        
+                        html += '</tbody></table>';
+                        document.getElementById('studentsData').innerHTML = html;
+                    }
+                    studentsLoaded = true;
+                }
+            } catch (error) {
+                document.getElementById('studentsData').innerHTML = '<p>Error loading students</p>';
+            }
+        }
+
+        async function loadFaculty() {
+            try {
+                const response = await fetch('/api/admin/faculty');
+                const result = await response.json();
+                
+                if (result.success) {
+                    const faculty = result.data;
+                    
+                    // Populate faculty select for courses
+                    let selectHtml = '<option value="">-- Not Assigned --</option>';
+                    faculty.forEach(f => {
+                        selectHtml += `<option value="${f.id}">Prof. ${f.firstName} ${f.lastName}</option>`;
+                    });
+                    document.getElementById('facultySelect').innerHTML = selectHtml;
+                    
+                    if (faculty.length === 0) {
+                        document.getElementById('facultyData').innerHTML = '<p>No faculty found.</p>';
+                    } else {
+                        let html = `
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Department</th>
+                                        <th>Joining Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                        `;
+                        
+                        faculty.forEach(f => {
+                            html += `
+                                <tr>
+                                    <td>${f.id}</td>
+                                    <td>Prof. ${f.firstName} ${f.lastName}</td>
+                                    <td>${f.email}</td>
+                                    <td>${f.department || 'N/A'}</td>
+                                    <td>${f.joiningDate || 'N/A'}</td>
+                                </tr>
+                            `;
+                        });
+                        
+                        html += '</tbody></table>';
+                        document.getElementById('facultyData').innerHTML = html;
+                    }
+                    facultyLoaded = true;
+                }
+            } catch (error) {
+                document.getElementById('facultyData').innerHTML = '<p>Error loading faculty</p>';
+            }
+        }
+
+        async function loadCourses() {
+            try {
+                const response = await fetch('/api/admin/courses');
+                const result = await response.json();
+                
+                if (result.success) {
+                    const courses = result.data;
+                    if (courses.length === 0) {
+                        document.getElementById('coursesData').innerHTML = '<p>No courses found.</p>';
+                    } else {
+                        let html = `
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Course Name</th>
+                                        <th>Code</th>
+                                        <th>Credits</th>
+                                        <th>Faculty</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                        `;
+                        
+                        courses.forEach(course => {
+                            html += `
+                                <tr>
+                                    <td>${course.id}</td>
+                                    <td>${course.name}</td>
+                                    <td>${course.code}</td>
+                                    <td>${course.credits}</td>
+                                    <td>${course.faculty}</td>
+                                </tr>
+                            `;
+                        });
+                        
+                        html += '</tbody></table>';
+                        document.getElementById('coursesData').innerHTML = html;
+                    }
+                    coursesLoaded = true;
+                }
+            } catch (error) {
+                document.getElementById('coursesData').innerHTML = '<p>Error loading courses</p>';
+            }
+        }
+
+        function openAddStudentModal() {
+            document.getElementById('addStudentModal').classList.add('active');
+        }
+
+        function openAddFacultyModal() {
+            if (!facultyLoaded) loadFaculty();
+            document.getElementById('addFacultyModal').classList.add('active');
+        }
+
+        function openAddCourseModal() {
+            if (!facultyLoaded) loadFaculty();
+            document.getElementById('addCourseModal').classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        // Add Student Form
+        document.getElementById('addStudentForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData);
+
+            try {
+                const response = await fetch('/api/admin/students', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                const alertDiv = document.getElementById('studentAlert');
+
+                if (result.success) {
+                    alertDiv.innerHTML = '<div class="alert alert-success">Student added successfully!</div>';
+                    closeModal('addStudentModal');
+                    e.target.reset();
+                    loadStudents();
+                    loadStats();
+                } else {
+                    alertDiv.innerHTML = '<div class="alert alert-error">Error: ' + result.message + '</div>';
+                }
+            } catch (error) {
+                document.getElementById('studentAlert').innerHTML = '<div class="alert alert-error">Error adding student</div>';
+            }
+        });
+
+        // Add Faculty Form
+        document.getElementById('addFacultyForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData);
+
+            try {
+                const response = await fetch('/api/admin/faculty', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                const alertDiv = document.getElementById('facultyAlert');
+
+                if (result.success) {
+                    alertDiv.innerHTML = '<div class="alert alert-success">Faculty added successfully!</div>';
+                    closeModal('addFacultyModal');
+                    e.target.reset();
+                    loadFaculty();
+                    loadStats();
+                } else {
+                    alertDiv.innerHTML = '<div class="alert alert-error">Error: ' + result.message + '</div>';
+                }
+            } catch (error) {
+                document.getElementById('facultyAlert').innerHTML = '<div class="alert alert-error">Error adding faculty</div>';
+            }
+        });
+
+        // Add Course Form
+        document.getElementById('addCourseForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData);
+            if (!data.facultyId) delete data.facultyId;
+
+            try {
+                const response = await fetch('/api/admin/courses', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                const alertDiv = document.getElementById('courseAlert');
+
+                if (result.success) {
+                    alertDiv.innerHTML = '<div class="alert alert-success">Course added successfully!</div>';
+                    closeModal('addCourseModal');
+                    e.target.reset();
+                    loadCourses();
+                    loadStats();
+                } else {
+                    alertDiv.innerHTML = '<div class="alert alert-error">Error: ' + result.message + '</div>';
+                }
+            } catch (error) {
+                document.getElementById('courseAlert').innerHTML = '<div class="alert alert-error">Error adding course</div>';
+            }
+        });
+
+        // Load initial data
+        loadStats();
+        loadStudents();
+    </script>
+</body>
+</html>

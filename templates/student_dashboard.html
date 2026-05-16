@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .navbar h1 {
+            font-size: 24px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: white;
+            color: #667eea;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 12px 24px;
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            color: #666;
+        }
+
+        .tab-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: transparent;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+
+        .card h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 22px;
+        }
+
+        .profile-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .profile-item {
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .profile-item label {
+            display: block;
+            color: #666;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .profile-item p {
+            color: #333;
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table th {
+            background: #f8f9fa;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #666;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        table td {
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+            color: #333;
+        }
+
+        table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-paid {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .badge-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .badge-overdue {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .badge-partial {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .badge-grade {
+            background: #667eea;
+            color: white;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .fee-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .fee-stat {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .fee-stat h3 {
+            font-size: 32px;
+            margin-bottom: 5px;
+        }
+
+        .fee-stat p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .fee-stat.warning {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        .fee-stat.success {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 15px 20px;
+            }
+
+            .navbar h1 {
+                font-size: 18px;
+            }
+
+            .tabs {
+                overflow-x: auto;
+            }
+
+            table {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <h1 id="studentPortalTitle">🎓 Student Portal</h1>
+        <div class="user-info">
+            <span id="userName">{{ user_name }}</span>
+            <button class="logout-btn" onclick="window.location.href='/logout'">Logout</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Quick Stats -->
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 15px; margin-bottom: 30px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+            <div style="text-align: center;">
+                <div style="font-size: 32px; font-weight: bold;" id="statCourses">0</div>
+                <div style="font-size: 14px; opacity: 0.9;">My Courses</div>
+            </div>
+            <div style="text-align: center;">
+                <div style="font-size: 32px; font-weight: bold;" id="statPending">0</div>
+                <div style="font-size: 14px; opacity: 0.9;">Pending Submissions</div>
+            </div>
+            <div style="text-align: center;">
+                <div style="font-size: 32px; font-weight: bold;" id="statFeesPaid">$0</div>
+                <div style="font-size: 14px; opacity: 0.9;">Total Fees Paid</div>
+            </div>
+            <div style="text-align: center;">
+                <div style="font-size: 32px; font-weight: bold;" id="statGPA">0.0</div>
+                <div style="font-size: 14px; opacity: 0.9;">Average Grade</div>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="showTab('profile')">My Profile</button>
+            <button class="tab-btn" onclick="showTab('subjects')">My Subjects</button>
+            <button class="tab-btn" onclick="showTab('enroll')">Enroll in Subjects</button>
+            <button class="tab-btn" onclick="showTab('resources')" id="resourcesTabBtn">Assignments & Quizzes</button>
+            <button class="tab-btn" onclick="showTab('fees')">Fee Portal</button>
+            <button class="tab-btn" onclick="showTab('payments')">Payment History</button>
+            <button class="tab-btn" onclick="showTab('announcements')">Class Announcements</button>
+        </div>
+
+        <!-- Profile Tab -->
+        <div id="profile" class="tab-content active">
+            <div class="card">
+                <h2>My Profile</h2>
+                <div id="profileData" class="loading">Loading...</div>
+            </div>
+        </div>
+
+        <!-- Subjects Tab -->
+        <div id="subjects" class="tab-content">
+            <div class="card">
+                <h2>Enrolled Subjects</h2>
+                <div id="subjectsData" class="loading">Loading...</div>
+            </div>
+        </div>
+
+        <!-- Enroll Tab -->
+        <div id="enroll" class="tab-content">
+            <div class="card">
+                <h2>Available Subjects for Enrollment</h2>
+                <div id="enrollData" class="loading">Loading...</div>
+            </div>
+        </div>
+
+        <!-- Resources Tab -->
+        <div id="resources" class="tab-content">
+            <div class="card">
+                <h2 id="resourcesTitle">Assignments & Quizzes</h2>
+                <div id="resourcesData" class="loading">Loading...</div>
+            </div>
+        </div>
+
+        <!-- Fees Tab -->
+        <div id="fees" class="tab-content">
+            <div class="card">
+                <h2>Fee Structure & Dues</h2>
+                <div id="feesData" class="loading">Loading...</div>
+            </div>
+        </div>
+
+        <!-- Payments Tab -->
+        <div id="payments" class="tab-content">
+            <div class="card">
+                <h2>Payment History</h2>
+                <div id="paymentsData" class="loading">Loading...</div>
+            </div>
+        </div>
+
+        <!-- Announcements Tab -->
+        <div id="announcements" class="tab-content">
+            <div class="card">
+                <h2>Class Announcements</h2>
+                <div id="announcementsData" class="loading">Loading announcements...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let profileLoaded = false;
+        let subjectsLoaded = false;
+        let availableSubjectsLoaded = false;
+        let resourcesLoaded = false;
+        let feesLoaded = false;
+        let paymentsLoaded = false;
+        let announcementsLoaded = false;
+        let institutionType = 'School';
+
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+
+            if (tabName === 'profile' && !profileLoaded) {
+                loadProfile();
+            } else if (tabName === 'subjects' && !subjectsLoaded) {
+                loadSubjects();
+            } else if (tabName === 'enroll' && !availableSubjectsLoaded) {
+                loadAvailableSubjects();
+            } else if (tabName === 'resources' && !resourcesLoaded) {
+                loadResources();
+            } else if (tabName === 'fees' && !feesLoaded) {
+                loadFees();
+            } else if (tabName === 'payments' && !paymentsLoaded) {
+                loadPayments();
+            } else if (tabName === 'announcements' && !announcementsLoaded) {
+                loadAnnouncements();
+                announcementsLoaded = true;
+            }
+        }
+
+        async function loadProfile() {
+            try {
+                const response = await fetch('/api/student/profile');
+                const result = await response.json();
+                
+                if (result.success) {
+                    const data = result.data;
+                    document.getElementById('profileData').innerHTML = `
+                        <div class="profile-grid">
+                            <div class="profile-item">
+                                <label>First Name</label>
+                                <p>${data.firstName}</p>
+                            </div>
+                            <div class="profile-item">
+                                <label>Last Name</label>
+                                <p>${data.lastName}</p>
+                            </div>
+                            <div class="profile-item">
+                                <label>Email</label>
+                                <p>${data.email}</p>
+                            </div>
+                            <div class="profile-item">
+                                <label>Date of Birth</label>
+                                <p>${data.dob || 'N/A'}</p>
+                            </div>
+                            <div class="profile-item">
+                                <label>Phone Number</label>
+                                <p>${data.phone || 'N/A'}</p>
+                            </div>
+                            <div class="profile-item">
+                                <label>Class</label>
+                                <p>${data.className}</p>
+                            </div>
+                            <div class="profile-item">
+                                <label>Section</label>
+                                <p>${data.section}</p>
+                            </div>
+                            <div class="profile-item">
+                                <label>Room Number</label>
+                                <p>${data.roomNumber}</p>
+                            </div>
+                            <div class="profile-item">
+                                <label>Enrollment Date</label>
+                                <p>${data.enrollmentDate || 'N/A'}</p>
+                            </div>
+                            <div class="profile-item">
+                                <label>Address</label>
+                                <p>${data.address || 'N/A'}</p>
+                            </div>
+                        </div>
+                    `;
+                    profileLoaded = true;
+                }
+            } catch (error) {
+                document.getElementById('profileData').innerHTML = '<p>Error loading profile</p>';
+            }
+        }
+
+        async function loadSubjects() {
+            try {
+                const response = await fetch('/api/student/subjects');
+                const result = await response.json();
+                
+                if (result.success) {
+                    const subjects = result.data;
+                    if (subjects.length === 0) {
+                        document.getElementById('subjectsData').innerHTML = '<p>No subjects enrolled yet.</p>';
+                    } else {
+                        let html = `
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Subject Name</th>
+                                        <th>Code</th>
+                                        <th>Type</th>
+                                        <th>Credits</th>
+                                        <th>Faculty</th>
+                                        <th>Grade</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                        `;
+                        
+                        subjects.forEach(subject => {
+                            html += `
+                                <tr>
+                                    <td><strong>${subject.name}</strong></td>
+                                    <td>${subject.code}</td>
+                                    <td>${subject.type}</td>
+                                    <td>${subject.credits}</td>
+                                    <td>${subject.faculty}</td>
+                                    <td><span class="badge badge-grade">${subject.grade}</span></td>
+                                    <td><button class="logout-btn" style="background:#dc3545;border-color:#dc3545;" onclick="unenrollSubject(${subject.id})">Drop</button></td>
+                                </tr>
+                            `;
+                        });
+                        
+                        html += '</tbody></table>';
+                        document.getElementById('subjectsData').innerHTML = html;
+                    }
+                    subjectsLoaded = true;
+                }
+            } catch (error) {
+                document.getElementById('subjectsData').innerHTML = '<p>Error loading subjects</p>';
+            }
+        }
+
+        async function loadAvailableSubjects() {
+            try {
+                const response = await fetch('/api/student/available-subjects');
+                const result = await response.json();
+
+                if (result.success) {
+                    const subjects = result.data;
+                    if (subjects.length === 0) {
+                        document.getElementById('enrollData').innerHTML = '<p>No subjects available for enrollment.</p>';
+                    } else {
+                        let html = `
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Subject Name</th>
+                                        <th>Code</th>
+                                        <th>Type</th>
+                                        <th>Credits</th>
+                                        <th>Faculty</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                        `;
+
+                        subjects.forEach(subject => {
+                            html += `
+                                <tr>
+                                    <td><strong>${subject.name}</strong></td>
+                                    <td>${subject.code}</td>
+                                    <td>${subject.type}</td>
+                                    <td>${subject.credits}</td>
+                                    <td>${subject.faculty}</td>
+                                    <td><button class="logout-btn" onclick="enrollSubject(${subject.id})">Enroll</button></td>
+                                </tr>
+                            `;
+                        });
+
+                        html += '</tbody></table>';
+                        document.getElementById('enrollData').innerHTML = html;
+                    }
+                    availableSubjectsLoaded = true;
+                }
+            } catch (error) {
+                document.getElementById('enrollData').innerHTML = '<p>Error loading available subjects</p>';
+            }
+        }
+
+        async function enrollSubject(subjectId) {
+            try {
+                const response = await fetch('/api/student/enroll', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ subjectId })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    availableSubjectsLoaded = false;
+                    subjectsLoaded = false;
+                    loadAvailableSubjects();
+                    loadSubjects();
+                    alert(result.message || 'Enrolled successfully');
+                } else {
+                    alert(result.message || 'Enrollment failed');
+                }
+            } catch (error) {
+                alert('Enrollment failed');
+            }
+        }
+
+        async function unenrollSubject(subjectId) {
+            try {
+                const response = await fetch('/api/student/unenroll', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ subjectId })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    subjectsLoaded = false;
+                    availableSubjectsLoaded = false;
+                    loadSubjects();
+                    loadAvailableSubjects();
+                    alert(result.message || 'Dropped successfully');
+                } else {
+                    alert(result.message || 'Drop failed');
+                }
+            } catch (error) {
+                alert('Drop failed');
+            }
+        }
+
+        async function loadFees() {
+            try {
+                const response = await fetch('/api/student/fees');
+                const result = await response.json();
+                
+                if (result.success) {
+                    const fees = result.data;
+                    
+                    if (fees.length === 0) {
+                        document.getElementById('feesData').innerHTML = '<p>No fee structure found.</p>';
+                    } else {
+                        // Calculate totals
+                        let totalDue = 0;
+                        let totalPaid = 0;
+                        let overdueCount = 0;
+                        
+                        fees.forEach(fee => {
+                            totalDue += fee.amountDue;
+                            totalPaid += fee.amountPaid;
+                            if (fee.status === 'Overdue') overdueCount++;
+                        });
+                        
+                        let html = `
+                            <div class="fee-summary">
+                                <div class="fee-stat">
+                                    <h3>$${(totalDue + totalPaid).toFixed(2)}</h3>
+                                    <p>Total Fee Structure</p>
+                                </div>
+                                <div class="fee-stat success">
+                                    <h3>$${totalPaid.toFixed(2)}</h3>
+                                    <p>Total Paid</p>
+                                </div>
+                                <div class="fee-stat ${totalDue > 0 ? 'warning' : 'success'}">
+                                    <h3>$${totalDue.toFixed(2)}</h3>
+                                    <p>Total Due</p>
+                                </div>
+                                <div class="fee-stat ${overdueCount > 0 ? 'warning' : ''}">
+                                    <h3>${overdueCount}</h3>
+                                    <p>Overdue Items</p>
+                                </div>
+                            </div>
+                            
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Fee Name</th>
+                                        <th>Type</th>
+                                        <th>Total Amount</th>
+                                        <th>Paid</th>
+                                        <th>Due</th>
+                                        <th>Due Date</th>
+                                        <th>Frequency</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                        `;
+                        
+                        fees.forEach(fee => {
+                            let badgeClass = 'badge-paid';
+                            if (fee.status === 'Pending') badgeClass = 'badge-pending';
+                            if (fee.status === 'Overdue') badgeClass = 'badge-overdue';
+                            if (fee.status === 'Partial') badgeClass = 'badge-partial';
+                            
+                            html += `
+                                <tr>
+                                    <td><strong>${fee.name}</strong></td>
+                                    <td>${fee.type}</td>
+                                    <td>$${fee.totalAmount.toFixed(2)}</td>
+                                    <td>$${fee.amountPaid.toFixed(2)}</td>
+                                    <td><strong>$${fee.amountDue.toFixed(2)}</strong></td>
+                                    <td>${fee.dueDate}</td>
+                                    <td>${fee.frequency}</td>
+                                    <td><span class="badge ${badgeClass}">${fee.status}</span></td>
+                                </tr>
+                            `;
+                        });
+                        
+                        html += '</tbody></table>';
+                        document.getElementById('feesData').innerHTML = html;
+                    }
+                    feesLoaded = true;
+                }
+            } catch (error) {
+                document.getElementById('feesData').innerHTML = '<p>Error loading fees</p>';
+            }
+        }
+
+        async function loadPayments() {
+            try {
+                const response = await fetch('/api/student/fee-payments');
+                const result = await response.json();
+                
+                if (result.success) {
+                    const payments = result.data;
+                    
+                    if (payments.length === 0) {
+                        document.getElementById('paymentsData').innerHTML = '<p>No payment history found.</p>';
+                    } else {
+                        let html = `
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Payment ID</th>
+                                        <th>Fee Name</th>
+                                        <th>Amount Paid</th>
+                                        <th>Payment Date</th>
+                                        <th>Payment Method</th>
+                                        <th>Receipt Number</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                        `;
+                        
+                        payments.forEach(payment => {
+                            html += `
+                                <tr>
+                                    <td>${payment.id}</td>
+                                    <td>${payment.feeName}</td>
+                                    <td><strong>$${payment.amount.toFixed(2)}</strong></td>
+                                    <td>${payment.date}</td>
+                                    <td>${payment.method}</td>
+                                    <td><code>${payment.receipt}</code></td>
+                                    <td><span class="badge badge-paid">${payment.status}</span></td>
+                                </tr>
+                            `;
+                        });
+                        
+                        html += '</tbody></table>';
+                        document.getElementById('paymentsData').innerHTML = html;
+                    }
+                    paymentsLoaded = true;
+                }
+            } catch (error) {
+                document.getElementById('paymentsData').innerHTML = '<p>Error loading payments</p>';
+            }
+        }
+
+        async function loadResources() {
+            try {
+                const response = await fetch('/api/student/resources');
+                const result = await response.json();
+
+                if (result.success) {
+                    const resources = result.data || [];
+                    if (resources.length === 0) {
+                        document.getElementById('resourcesData').innerHTML = '<p>No assignments or quizzes uploaded yet.</p>';
+                    } else {
+                        let html = `
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Type</th>
+                                        <th>Title</th>
+                                        <th>Subject</th>
+                                        <th>Faculty</th>
+                                        <th>Due Date</th>
+                                        <th>Max Marks</th>
+                                        <th>Status</th>
+                                        <th>Grade</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                        `;
+
+                        resources.forEach(item => {
+                            const isSubmitted = item.submissionStatus && item.submissionStatus !== 'Pending';
+                            const statusBadge = isSubmitted ? `<span class="badge" style="background:#d4edda; color:#155724;">${item.submissionStatus}</span>` : `<span class="badge" style="background:#fff3cd; color:#856404;">Not Submitted</span>`;
+                            const gradeDisplay = item.grade !== null ? item.grade : 'Awaiting';
+                            html += `
+                                <tr>
+                                    <td>${item.resourceType}</td>
+                                    <td><strong>${item.title}</strong></td>
+                                    <td>${item.subjectName} (${item.subjectCode})</td>
+                                    <td>${item.faculty}</td>
+                                    <td>${item.dueDate || 'N/A'}</td>
+                                    <td>${item.maxMarks ?? 'N/A'}</td>
+                                    <td>${statusBadge}</td>
+                                    <td>${gradeDisplay}</td>
+                                    <td><a href="${item.fileUrl}" target="_blank" style="margin-right:8px;">📥 Download</a><button class="logout-btn" onclick="openSubmissionForm(${item.id}, '${item.title}')" style="padding:6px 12px; font-size:12px;">📤 Submit</button></td>
+                                </tr>
+                            `;
+                        });
+
+                        html += '</tbody></table>';
+                        document.getElementById('resourcesData').innerHTML = html;
+                    }
+                    resourcesLoaded = true;
+                } else {
+                    document.getElementById('resourcesData').innerHTML = '<p>Could not load resources.</p>';
+                }
+            } catch (error) {
+                document.getElementById('resourcesData').innerHTML = '<p>Error loading resources</p>';
+            }
+        }
+
+        async function loadInstitutionContext() {
+            try {
+                const response = await fetch('/api/config/institution');
+                const result = await response.json();
+                if (result.success && result.data) {
+                    institutionType = result.data.institutionType || 'School';
+                    const label = institutionType === 'University' ? 'University' : institutionType === 'College' ? 'College' : 'School';
+                    document.getElementById('studentPortalTitle').textContent = `🎓 ${label} Student Portal`;
+
+                    const resourcesBtn = document.getElementById('resourcesTabBtn');
+                    if (resourcesBtn) {
+                        resourcesBtn.textContent = institutionType === 'School' ? 'Assignments & Quizzes' : 'Coursework';
+                    }
+
+                    const resourcesTitle = document.getElementById('resourcesTitle');
+                    if (resourcesTitle) {
+                        resourcesTitle.textContent = institutionType === 'School' ? 'Assignments & Quizzes' : 'Coursework';
+                    }
+                }
+            } catch (error) {
+                // keep default labels
+            }
+        }
+
+        function openSubmissionForm(resourceId, title) {
+            let html = `
+                <div style="position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:white; padding:30px; border-radius:10px; box-shadow:0 10px 40px rgba(0,0,0,0.2); z-index:9999; max-width:500px; width:90%;">
+                    <button onclick="this.parentElement.remove()" style="position:absolute; top:10px; right:10px; border:none; background:none; font-size:24px; cursor:pointer;">&times;</button>
+                    <h3>Submit: ${title}</h3>
+                    <div class="form-group">
+                        <label>Your Answer (File)</label>
+                        <input type="file" id="submissionFile" />
+                    </div>
+                    <div class="form-group">
+                        <label>Notes (Optional)</label>
+                        <textarea id="submissionNotes" placeholder="Any notes about your submission..." style="width:100%; height:80px; padding:10px; border:2px solid #e0e0e0; border-radius:8px;"></textarea>
+                    </div>
+                    <button class="logout-btn" onclick="submitAnswer(${resourceId}, this.parentElement)" style="width:100%; margin-top:15px; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); border:none;">Submit Answer</button>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', html);
+        }
+
+        async function submitAnswer(resourceId, formDiv) {
+            const file = document.getElementById('submissionFile')?.files?.[0];
+            const notes = document.getElementById('submissionNotes')?.value || '';
+            if (!file) {
+                alert('Please select a file to submit.');
+                return;
+            }
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('answerText', notes);
+            try {
+                const res = await fetch(`/api/student/resource/${resourceId}/submit`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await res.json();
+                if (result.success) {
+                    alert('Submission uploaded successfully!');
+                    formDiv.remove();
+                    resourcesLoaded = false;
+                    loadResources();
+                } else {
+                    alert('Error: ' + (result.message || 'Upload failed'));
+                }
+            } catch (error) {
+                alert('Error submitting answer.');
+            }
+        }
+
+        async function loadUpcomingDeadlines() {
+            try {
+                const res = await fetch('/api/upcoming-deadlines?limit=6');
+                const result = await res.json();
+                if (result.success && result.data) {
+                    const items = result.data;
+                    let html = '<div style="background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:white; padding:20px; border-radius:12px; margin-bottom:20px;"><h3 style="margin-top:0;">📋 Upcoming Deadlines</h3>';
+                    if (!items.length) {
+                        html += '<p>No upcoming deadlines.</p>';
+                    } else {
+                        html += '<ul style="list-style:none; padding:0;">';
+                        items.forEach(item => {
+                            const statusIcon = item.status === 'Submitted' || item.status === 'Resubmitted' ? '✓' : '⏳';
+                            html += `<li style="padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.2);"><strong>${statusIcon} ${item.title}</strong> - Due: ${item.dueDate} | ${item.subjectCode}</li>`;
+                        });
+                        html += '</ul>';
+                    }
+                    html += '</div>';
+                    const container = document.querySelector('.container');
+                    if (container) {
+                        container.insertAdjacentHTML('afterbegin', html);
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading upcoming deadlines:', error);
+            }
+        }
+
+        async function loadDashboardStats() {
+            try {
+                const res = await fetch('/api/dashboard/stats');
+                const result = await res.json();
+                if (result.success && result.data) {
+                    const data = result.data;
+                    document.getElementById('statCourses').textContent = data.totalCourses || 0;
+                    document.getElementById('statPending').textContent = data.pendingSubmissions || 0;
+                    document.getElementById('statFeesPaid').textContent = '$' + (data.totalFeesPaid || 0).toFixed(2);
+                    document.getElementById('statGPA').textContent = (data.averageGrade || 0).toFixed(1);
+                }
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        async function loadAnnouncements() {
+            try {
+                const res = await fetch('/api/announcements?limit=30');
+                const result = await res.json();
+                if (result.success && result.data) {
+                    const items = result.data;
+                    let html = '<div style="max-height: 700px; overflow-y: auto;">';
+                    if (!items.length) {
+                        html += '<p>No announcements yet.</p>';
+                    } else {
+                        items.forEach(ann => {
+                            const priorityColor = ann.priority === 'Urgent' ? '#dc3545' : ann.priority === 'High' ? '#fd7e14' : '#28a745';
+                            html += `
+                                <div style="padding: 15px; border-left: 4px solid ${priorityColor}; background: #f8f9fa; margin-bottom: 12px; border-radius: 5px;">
+                                    <strong style="font-size: 16px; color: #333;">${ann.title}</strong>
+                                    <div style="font-size: 12px; color: #666; margin-top: 3px;">${ann.facultyName} | ${ann.subjectName} | ${ann.createdAt}</div>
+                                    <p style="margin-top: 10px; color: #555;">${ann.content}</p>
+                                </div>
+                            `;
+                        });
+                    }
+                    html += '</div>';
+                    document.getElementById('announcementsData').innerHTML = html;
+                }
+            } catch (error) {
+                document.getElementById('announcementsData').innerHTML = '<p>Error loading announcements.</p>';
+            }
+        }
+        loadInstitutionContext();
+        loadProfile();
+        loadUpcomingDeadlines();
+        loadDashboardStats();
+    </script>
+</body>
+</html>

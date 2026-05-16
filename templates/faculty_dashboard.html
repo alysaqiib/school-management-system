@@ -1,0 +1,1222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Faculty Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .navbar h1 {
+            font-size: 24px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: white;
+            color: #f5576c;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 12px 24px;
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            color: #666;
+        }
+
+        .tab-btn:hover {
+            border-color: #f5576c;
+            color: #f5576c;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border-color: transparent;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+
+        .card h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 22px;
+        }
+
+        .course-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .course-card {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        .course-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .course-card h3 {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .course-card p {
+            opacity: 0.9;
+            font-size: 14px;
+            margin: 5px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table th {
+            background: #f8f9fa;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #666;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        table td {
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+            color: #333;
+        }
+
+        table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .action-btn {
+            padding: 8px 16px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(245, 87, 108, 0.3);
+        }
+
+        .status-select, .grade-input {
+            padding: 8px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .grade-input {
+            width: 80px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .alert {
+            padding: 12px 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .info-box {
+            background: #f8f9fa;
+            border-left: 4px solid #f5576c;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .info-box h3 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .info-box p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .contact-admin-link {
+            display: inline-block;
+            margin-top: 8px;
+            color: #f5576c;
+            text-decoration: none;
+            font-weight: 600;
+            border-bottom: 1px dotted rgba(245,87,108,0.6);
+        }
+        .contact-admin-link:hover {
+            color: #d4425a;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <h1 id="facultyPortalTitle">👨‍🏫 Faculty Portal</h1>
+        <div class="user-info">
+            <span id="userName">{{ user_name }}</span>
+            <button class="logout-btn" onclick="window.location.href='/logout'">Logout</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Quick Stats -->
+        <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 20px; border-radius: 15px; margin-bottom: 30px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+            <div style="text-align: center;">
+                <div style="font-size: 32px; font-weight: bold;" id="statCourses">0</div>
+                <div style="font-size: 14px; opacity: 0.9;">My Courses</div>
+            </div>
+            <div style="text-align: center;">
+                <div style="font-size: 32px; font-weight: bold;" id="statStudents">0</div>
+                <div style="font-size: 14px; opacity: 0.9;">Total Students</div>
+            </div>
+            <div style="text-align: center;">
+                <div style="font-size: 32px; font-weight: bold;" id="statPending">0</div>
+                <div style="font-size: 14px; opacity: 0.9;">Pending Submissions</div>
+            </div>
+            <div style="text-align: center;">
+                <div style="font-size: 32px; font-weight: bold;" id="statAttendance">0</div>
+                <div style="font-size: 14px; opacity: 0.9;">Marked Today</div>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="showTab('courses')">My Courses</button>
+            <button class="tab-btn" onclick="showTab('students')">View Students</button>
+            <button class="tab-btn" onclick="showTab('attendance')">Mark Attendance</button>
+            <button class="tab-btn" onclick="showTab('grades')">Update Grades</button>
+            <button class="tab-btn" onclick="showTab('resources')" id="resourcesTabBtn">Assignments & Quizzes</button>
+            <button class="tab-btn" onclick="showTab('thresholds')">Grade Thresholds</button>
+            <button class="tab-btn" onclick="showTab('announcements')">Class Announcements</button>
+        </div>
+
+        <!-- Courses Tab -->
+        <div id="courses" class="tab-content active">
+            <div class="card">
+                <h2>My Courses</h2>
+                <div id="coursesData" class="loading">Loading...</div>
+            </div>
+        </div>
+
+        <!-- Students Tab -->
+        <div id="students" class="tab-content">
+            <div class="card">
+                <h2>Students in My Courses</h2>
+                <div id="studentsData">
+                    <p>Select a course to view students</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Attendance Tab -->
+        <div id="attendance" class="tab-content">
+            <div class="card">
+                <h2>Mark Attendance</h2>
+                <div id="attendanceData">
+                    <p>Select a course to mark attendance</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Grades Tab -->
+        <div id="grades" class="tab-content">
+            <div class="card">
+                <h2>Update Grades</h2>
+                <div id="gradesData">
+                    <p>Select a course to update grades</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resources Tab -->
+        <div id="resources" class="tab-content">
+            <div class="card">
+                <h2 id="resourcesTitle">Assignments & Quizzes</h2>
+                <div id="resourcesData">
+                    <p>Select a course to manage assignments and quizzes</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Thresholds Tab -->
+        <div id="thresholds" class="tab-content">
+            <div class="card">
+                <h2>Grade Thresholds (Admin Only)</h2>
+                <div id="thresholdsData">
+                    <p>Loading...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Announcements Tab -->
+        <div id="announcements" class="tab-content">
+            <div class="card">
+                <h2>Class Announcements</h2>
+                <div style="margin-bottom: 30px;">
+                    <h3 style="margin-bottom: 15px;">Post New Announcement</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                        <select id="announcementCourse" style="padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px;">
+                            <option value="">-- Select Course --</option>
+                        </select>
+                        <input type="text" id="announcementTitle" placeholder="Announcement Title" style="padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px;" />
+                    </div>
+                    <select id="announcementPriority" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; margin-bottom: 15px;">
+                        <option value="Normal">Normal Priority</option>
+                        <option value="High">High Priority</option>
+                        <option value="Urgent">Urgent</option>
+                    </select>
+                    <textarea id="announcementContent" placeholder="Write your announcement here..." style="width: 100%; height: 100px; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; margin-bottom: 15px; font-family: inherit;"></textarea>
+                    <button onclick="postAnnouncement()" class="logout-btn" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); border: none; width: auto; padding: 12px 30px;">Post Announcement</button>
+                </div>
+                <div id="announcementsData" class="loading">Loading announcements...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let courses = [];
+        let selectedCourse = null;
+        let institutionType = 'School';
+
+        async function loadDashboardStats() {
+            try {
+                const res = await fetch('/api/dashboard/stats');
+                const result = await res.json();
+                if (result.success && result.data) {
+                    const data = result.data;
+                    document.getElementById('statCourses').textContent = data.totalCourses || 0;
+                    document.getElementById('statStudents').textContent = data.totalStudents || 0;
+                    document.getElementById('statPending').textContent = data.pendingSubmissionsToGrade || 0;
+                    document.getElementById('statAttendance').textContent = data.attendanceMarkedToday || 0;
+                }
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+
+            if (tabName === 'courses' && courses.length === 0) {
+                loadCourses();
+            } else if (tabName === 'resources' && courses.length > 0) {
+                const sel = document.getElementById('resourceCourseSelect');
+                if (sel && sel.value) loadResourceManager(sel.value);
+            } else if (tabName === 'thresholds') {
+                loadThresholds();
+            } else if (tabName === 'announcements') {
+                loadAnnouncements();
+            }
+        }
+
+        async function loadAnnouncements() {
+            try {
+                const res = await fetch('/api/announcements?limit=20');
+                const result = await res.json();
+                if (result.success && result.data) {
+                    const items = result.data;
+                    let html = '<div style="max-height: 600px; overflow-y: auto;">';
+                    if (!items.length) {
+                        html += '<p>No announcements yet.</p>';
+                    } else {
+                        items.forEach(ann => {
+                            const priorityColor = ann.priority === 'Urgent' ? '#dc3545' : ann.priority === 'High' ? '#fd7e14' : '#28a745';
+                            html += `
+                                <div style="padding: 15px; border-left: 4px solid ${priorityColor}; background: #f8f9fa; margin-bottom: 12px; border-radius: 5px;">
+                                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                                        <div style="flex: 1;">
+                                            <strong style="font-size: 16px;">${ann.title}</strong>
+                                            <div style="font-size: 12px; color: #666; margin-top: 3px;">${ann.facultyName} | ${ann.subjectName} | ${ann.createdAt}</div>
+                                            <p style="margin-top: 10px; color: #333;">${ann.content}</p>
+                                        </div>
+                                        <button onclick="deleteAnnouncement(${ann.id})" style="background: #dc3545; color: white; border: none; padding: 5px 12px; border-radius: 5px; cursor: pointer; font-size: 12px;">Delete</button>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                    }
+                    html += '</div>';
+                    document.getElementById('announcementsData').innerHTML = html;
+                }
+            } catch (error) {
+                document.getElementById('announcementsData').innerHTML = '<p>Error loading announcements.</p>';
+            }
+        }
+
+        async function postAnnouncement() {
+            const courseId = document.getElementById('announcementCourse')?.value;
+            const title = document.getElementById('announcementTitle')?.value?.trim();
+            const content = document.getElementById('announcementContent')?.value?.trim();
+            const priority = document.getElementById('announcementPriority')?.value || 'Normal';
+
+            if (!courseId || !title || !content) {
+                alert('Please fill in all fields.');
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/faculty/announcements', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ subjectId: courseId, title, content, priority })
+                });
+                const result = await res.json();
+                if (result.success) {
+                    document.getElementById('announcementTitle').value = '';
+                    document.getElementById('announcementContent').value = '';
+                    loadAnnouncements();
+                    alert('Announcement posted successfully!');
+                } else {
+                    alert('Error: ' + result.message);
+                }
+            } catch (error) {
+                alert('Error posting announcement.');
+            }
+        }
+
+        async function deleteAnnouncement(id) {
+            if (!confirm('Delete this announcement?')) return;
+            try {
+                const res = await fetch(`/api/faculty/announcements/${id}`, { method: 'DELETE' });
+                const result = await res.json();
+                if (result.success) {
+                    loadAnnouncements();
+                } else {
+                    alert('Error deleting announcement.');
+                }
+            } catch (error) {
+                alert('Error deleting announcement.');
+            }
+        }
+
+        async function loadCourses() {
+            console.log('Loading courses...'); // Debug
+            try {
+                const response = await fetch('/api/faculty/courses');
+                console.log('Response status:', response.status); // Debug
+                
+                const result = await response.json();
+                console.log('API Response:', result); // Debug
+                
+                if (result.success) {
+                    courses = result.data;
+                    console.log('Courses loaded:', courses.length); // Debug
+                    
+                    if (courses.length === 0) {
+                        document.getElementById('coursesData').innerHTML = `
+                            <div class="info-box">
+                                <h3>📚 No Courses Assigned</h3>
+                                <p>You don't have any courses assigned yet.</p>
+                                <p style="margin-top: 10px; font-size: 13px;">Faculty ID: <strong>${result.facultyId || 'Unknown'}</strong></p>
+                                <p style="margin-top: 10px;">Please contact the administrator to assign subjects/courses to your account.</p>
+                            </div>
+                        `;
+                    } else {
+                        let html = '<div class="course-grid">';
+                        courses.forEach(course => {
+                            html += `
+                                <div class="course-card">
+                                    <h3>${course.name}</h3>
+                                    <p>📋 Code: ${course.code}</p>
+                                    <p>⭐ Credits: ${course.credits}</p>
+                                    <p>🏫 Class: ${course.className}</p>
+                                    <p>📖 Type: ${course.type}</p>
+                                </div>
+                            `;
+                        });
+                        html += '</div>';
+                        document.getElementById('coursesData').innerHTML = html;
+                        
+                        populateCourseSelectors();
+                    }
+                } else {
+                    console.error('API returned error:', result.message); // Debug
+                    document.getElementById('coursesData').innerHTML = `
+                        <div class="info-box" style="border-left-color: #dc3545;">
+                            <h3>⚠️ Error Loading Courses</h3>
+                            <p><strong>Error:</strong> ${result.message}</p>
+                            <p style="margin-top: 10px;">Faculty ID: <strong>${result.facultyId || 'Unknown'}</strong></p>
+                            <button class="action-btn" onclick="loadCourses()" style="margin-top: 15px;">🔄 Retry</button>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Fetch error:', error); // Debug
+                document.getElementById('coursesData').innerHTML = `
+                    <div class="info-box" style="border-left-color: #dc3545;">
+                        <h3>⚠️ Connection Error</h3>
+                        <p>Could not connect to the server.</p>
+                        <p style="margin-top: 10px;"><strong>Details:</strong> ${error.message}</p>
+                        <button class="action-btn" onclick="loadCourses()" style="margin-top: 15px;">🔄 Retry</button>
+                    </div>
+                `;
+            }
+        }
+
+        function populateCourseSelectors() {
+            const studentsSelector = `
+                <label>Select Course:</label>
+                <select id="studentCourseSelect" onchange="loadStudents(this.value)" style="margin: 10px 0; padding: 10px; border-radius: 8px; border: 2px solid #e0e0e0; width: 100%; max-width: 400px;">
+                    <option value="">-- Select a course --</option>
+                    ${courses.map(c => `<option value="${c.id}">${c.name} (${c.code})</option>`).join('')}
+                </select>
+                <div id="studentsList" style="margin-top: 20px;"></div>
+            `;
+            document.getElementById('studentsData').innerHTML = studentsSelector;
+
+            const attendanceSelector = `
+                <label>Select Course:</label>
+                <select id="attendanceCourseSelect" onchange="loadAttendanceForm(this.value)" style="margin: 10px 0; padding: 10px; border-radius: 8px; border: 2px solid #e0e0e0; width: 100%; max-width: 400px;">
+                    <option value="">-- Select a course --</option>
+                    ${courses.map(c => `<option value="${c.id}">${c.name} (${c.code})</option>`).join('')}
+                </select>
+                <div id="attendanceForm" style="margin-top: 20px;"></div>
+            `;
+            document.getElementById('attendanceData').innerHTML = attendanceSelector;
+
+            const gradesSelector = `
+                <label>Select Course:</label>
+                <select id="gradesCourseSelect" onchange="loadGradesForm(this.value)" style="margin: 10px 0; padding: 10px; border-radius: 8px; border: 2px solid #e0e0e0; width: 100%; max-width: 400px;">
+                    <option value="">-- Select a course --</option>
+                    ${courses.map(c => `<option value="${c.id}">${c.name} (${c.code})</option>`).join('')}
+                </select>
+                <div id="gradesForm" style="margin-top: 20px;"></div>
+            `;
+            document.getElementById('gradesData').innerHTML = gradesSelector;
+
+            const resourcesSelector = `
+                <label>Select Course:</label>
+                <select id="resourceCourseSelect" onchange="loadResourceManager(this.value)" style="margin: 10px 0; padding: 10px; border-radius: 8px; border: 2px solid #e0e0e0; width: 100%; max-width: 400px;">
+                    <option value="">-- Select a course --</option>
+                    ${courses.map(c => `<option value="${c.id}">${c.name} (${c.code})</option>`).join('')}
+                </select>
+                <div id="resourceManager" style="margin-top: 20px;"></div>
+            `;
+            document.getElementById('resourcesData').innerHTML = resourcesSelector;
+
+            // Populate announcement course selector
+            const announcementCourseSelect = document.getElementById('announcementCourse');
+            if (announcementCourseSelect) {
+                announcementCourseSelect.innerHTML = '<option value="">-- Select Course --</option>';
+                courses.forEach(c => {
+                    const option = document.createElement('option');
+                    option.value = c.id;
+                    option.textContent = `${c.name} (${c.code})`;
+                    announcementCourseSelect.appendChild(option);
+                });
+            }
+        }
+
+        async function loadResourceManager(courseId) {
+            const manager = document.getElementById('resourceManager');
+            if (!manager) return;
+            if (!courseId) {
+                manager.innerHTML = '<p>Please select a course.</p>';
+                return;
+            }
+
+            manager.innerHTML = '<p>Loading resources...</p>';
+            try {
+                const res = await fetch(`/api/faculty/course/${courseId}/resources`);
+                const result = await res.json();
+                if (!result.success) {
+                    manager.innerHTML = `<p>Error: ${result.message || 'Failed to load resources'}</p>`;
+                    return;
+                }
+
+                const items = result.data || [];
+                const itemLabel = institutionType === 'University' ? 'coursework' : 'classwork';
+                let html = `
+                    <div id="resourceAlert"></div>
+                    <div style="padding:16px; border:1px solid #eee; border-radius:12px; margin-bottom:16px;">
+                        <h3 style="margin-bottom:12px;">Upload ${itemLabel}</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Type</label>
+                                <select id="resourceType"><option value="Assignment">Assignment</option><option value="Quiz">Quiz</option></select>
+                            </div>
+                            <div class="form-group">
+                                <label>Title</label>
+                                <input type="text" id="resourceTitle" placeholder="e.g. Week 2 Quiz" />
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Due Date</label>
+                                <input type="date" id="resourceDueDate" />
+                            </div>
+                            <div class="form-group">
+                                <label>Max Marks</label>
+                                <input type="number" id="resourceMaxMarks" min="0" step="0.01" placeholder="10" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Description</label>
+                            <input type="text" id="resourceDescription" placeholder="Optional instructions" />
+                        </div>
+                        <div class="form-group">
+                            <label>File</label>
+                            <input type="file" id="resourceFile" />
+                        </div>
+                        <button class="action-btn" onclick="uploadResource()">Upload</button>
+                    </div>
+                `;
+
+                if (!items.length) {
+                    html += '<p>No assignments/quizzes uploaded yet for this course.</p>';
+                } else {
+                    html += '<table><thead><tr><th>Type</th><th>Title</th><th>Due Date</th><th>Marks</th><th>File</th><th>Submissions</th><th>Actions</th></tr></thead><tbody>';
+                    items.forEach(item => {
+                        html += `<tr><td>${item.resourceType}</td><td>${item.title}</td><td>${item.dueDate || 'N/A'}</td><td>${item.maxMarks ?? 'N/A'}</td><td><a href="${item.fileUrl}" target="_blank">${item.fileName}</a></td><td><button class="action-btn" onclick="viewSubmissions(${item.id}, '${item.title}')" style="padding:6px 12px; font-size:12px;">${item.submissionCount || 0} Submitted</button></td><td><button class="action-btn" onclick="editResource(${item.id}, '${item.title}', '${item.resourceType}', '${item.description}', '${item.dueDate}', ${item.maxMarks || 'null'})" style="padding:6px 12px; font-size:12px; margin-right:4px;">Edit</button><button class="action-btn" onclick="deleteResource(${item.id})" style="padding:6px 12px; font-size:12px; background:#dc3545;">Delete</button></td></tr>`;
+                    });
+                    html += '</tbody></table>';
+                }
+
+                manager.innerHTML = html;
+            } catch (error) {
+                manager.innerHTML = '<p>Error loading resources.</p>';
+            }
+        }
+
+        async function uploadResource() {
+            const courseId = document.getElementById('resourceCourseSelect')?.value;
+            if (!courseId) {
+                alert('Please select a course first.');
+                return;
+            }
+
+            const file = document.getElementById('resourceFile')?.files?.[0];
+            const title = document.getElementById('resourceTitle')?.value?.trim();
+            if (!title || !file) {
+                alert('Title and file are required.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('resourceType', document.getElementById('resourceType').value);
+            formData.append('title', title);
+            formData.append('description', document.getElementById('resourceDescription').value || '');
+            formData.append('dueDate', document.getElementById('resourceDueDate').value || '');
+            formData.append('maxMarks', document.getElementById('resourceMaxMarks').value || '');
+            formData.append('file', file);
+
+            try {
+                const res = await fetch(`/api/faculty/course/${courseId}/resources`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await res.json();
+                const alertDiv = document.getElementById('resourceAlert');
+                if (result.success) {
+                    if (alertDiv) alertDiv.innerHTML = '<div class="alert alert-success">✓ Resource uploaded successfully.</div>';
+                    loadResourceManager(courseId);
+                } else {
+                    if (alertDiv) alertDiv.innerHTML = '<div class="alert alert-error">✗ Error: ' + (result.message || 'Upload failed') + '</div>';
+                }
+            } catch (error) {
+                const alertDiv = document.getElementById('resourceAlert');
+                if (alertDiv) alertDiv.innerHTML = '<div class="alert alert-error">✗ Upload failed.</div>';
+            }
+        }
+
+        async function viewSubmissions(resourceId, resourceTitle) {
+            const courseId = document.getElementById('resourceCourseSelect')?.value;
+            if (!courseId) return;
+            try {
+                const res = await fetch(`/api/faculty/course/${courseId}/submissions`);
+                const result = await res.json();
+                if (!result.success) {
+                    alert('Error loading submissions.');
+                    return;
+                }
+                const subs = (result.data || []).filter(s => s.resourceId === resourceId);
+                let html = `<div style="position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:white; padding:30px; border-radius:10px; box-shadow:0 10px 40px rgba(0,0,0,0.2); z-index:9999; max-height:80vh; overflow-y:auto; max-width:900px; width:90%;"><button onclick="this.parentElement.remove()" style="position:absolute; top:10px; right:10px; border:none; background:none; font-size:24px; cursor:pointer;">&times;</button><h3>${resourceTitle} - Submissions (${subs.length})</h3>`;
+                if (!subs.length) {
+                    html += '<p>No submissions yet.</p>';
+                } else {
+                    html += '<table style="width:100%; margin-top:15px;"><thead><tr><th>Student</th><th>Submitted</th><th>Grade</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
+                    subs.forEach(sub => {
+                        html += `<tr><td>${sub.studentName}</td><td>${sub.submittedAt || 'N/A'}</td><td><input type="number" value="${sub.grade || ''}" placeholder="Grade" data-sub-id="${sub.submissionId}" class="grade-input" style="width:60px;" /></td><td>${sub.status}</td><td><button class="action-btn" onclick="viewSubmissionFile('${sub.fileUrl}')" style="padding:4px 8px; font-size:11px; margin-right:4px;">View</button><button class="action-btn" onclick="saveSubmissionGrade(${sub.submissionId}, this)" style="padding:4px 8px; font-size:11px;">Save Grade</button></td></tr>`;
+                    });
+                    html += '</tbody></table>';
+                }
+                html += '</div>';
+                document.body.insertAdjacentHTML('beforeend', html);
+            } catch (error) {
+                alert('Error loading submissions.');
+            }
+        }
+
+        function viewSubmissionFile(fileUrl) {
+            window.open(fileUrl, '_blank');
+        }
+
+        async function saveSubmissionGrade(submissionId, btn) {
+            const gradeInput = document.querySelector(`input[data-sub-id="${submissionId}"]`);
+            const grade = gradeInput ? gradeInput.value : null;
+            try {
+                const res = await fetch(`/api/faculty/submission/${submissionId}/grade`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ grade, feedback: '', status: grade !== null ? 'Graded' : 'Pending' })
+                });
+                const result = await res.json();
+                if (result.success) {
+                    btn.textContent = 'Saved';
+                    setTimeout(() => { btn.textContent = 'Save Grade'; }, 2000);
+                } else {
+                    alert('Error saving grade.');
+                }
+            } catch (error) {
+                alert('Error saving grade.');
+            }
+        }
+
+        async function editResource(resourceId, title, type, desc, dueDate, maxMarks) {
+            const courseId = document.getElementById('resourceCourseSelect')?.value;
+            const newTitle = prompt('Edit Title:', title);
+            if (!newTitle) return;
+            try {
+                const res = await fetch(`/api/faculty/resource/${resourceId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title: newTitle, resourceType: type, description: desc, dueDate, maxMarks })
+                });
+                const result = await res.json();
+                if (result.success) {
+                    alert('Resource updated.');
+                    loadResourceManager(courseId);
+                } else {
+                    alert('Error updating resource.');
+                }
+            } catch (error) {
+                alert('Error updating resource.');
+            }
+        }
+
+        async function deleteResource(resourceId) {
+            if (!confirm('Delete this resource and all submissions?')) return;
+            const courseId = document.getElementById('resourceCourseSelect')?.value;
+            try {
+                const res = await fetch(`/api/faculty/resource/${resourceId}`, { method: 'DELETE' });
+                const result = await res.json();
+                if (result.success) {
+                    alert('Resource deleted.');
+                    loadResourceManager(courseId);
+                } else {
+                    alert('Error deleting resource.');
+                }
+            } catch (error) {
+                alert('Error deleting resource.');
+            }
+        }
+
+        async function loadUpcomingDeadlines() {
+            try {
+                const res = await fetch('/api/upcoming-deadlines?limit=6');
+                const result = await res.json();
+                if (result.success && result.data) {
+                    const items = result.data;
+                    let html = '<div style="background:linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color:white; padding:20px; border-radius:12px; margin-bottom:20px;"><h3 style="margin-top:0;">📅 Upcoming Deadlines</h3>';
+                    if (!items.length) {
+                        html += '<p>No upcoming deadlines.</p>';
+                    } else {
+                        html += '<ul style="list-style:none; padding:0;">';
+                        items.forEach(item => {
+                            html += `<li style="padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.2);"><strong>${item.title}</strong> (${item.resourceType}) - Due: ${item.dueDate} | ${item.submissionCount || 0} submissions</li>`;
+                        });
+                        html += '</ul>';
+                    }
+                    html += '</div>';
+                    const container = document.querySelector('.container');
+                    if (container) {
+                        container.insertAdjacentHTML('afterbegin', html);
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading upcoming deadlines:', error);
+            }
+        }
+
+        async function loadInstitutionContext() {
+            try {
+                const res = await fetch('/api/config/institution');
+                const result = await res.json();
+                if (result.success && result.data) {
+                    institutionType = result.data.institutionType || 'School';
+                    const label = institutionType === 'University' ? 'University' : institutionType === 'College' ? 'College' : 'School';
+                    document.getElementById('facultyPortalTitle').textContent = `👨‍🏫 ${label} Faculty Portal`;
+                    const resourcesBtn = document.getElementById('resourcesTabBtn');
+                    if (resourcesBtn) {
+                        resourcesBtn.textContent = institutionType === 'School' ? 'Assignments & Quizzes' : 'Coursework Uploads';
+                    }
+                    const resourcesTitle = document.getElementById('resourcesTitle');
+                    if (resourcesTitle) {
+                        resourcesTitle.textContent = institutionType === 'School' ? 'Assignments & Quizzes' : 'Coursework Uploads';
+                    }
+                }
+            } catch (error) {
+                // keep defaults when institution settings are unavailable
+            }
+        }
+
+        async function loadStudents(courseId) {
+            if (!courseId) {
+                document.getElementById('studentsList').innerHTML = '';
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/faculty/course/${courseId}/students`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    const students = result.data;
+                    if (students.length === 0) {
+                        document.getElementById('studentsList').innerHTML = '<p>No students enrolled in this course.</p>';
+                    } else {
+                        let html = `
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Class</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                        `;
+                        
+                        students.forEach(student => {
+                            html += `
+                                <tr>
+                                    <td>${student.id}</td>
+                                    <td>${student.name}</td>
+                                    <td>${student.email}</td>
+                                    <td>${student.class}</td>
+                                </tr>
+                            `;
+                        });
+                        
+                        html += '</tbody></table>';
+                        document.getElementById('studentsList').innerHTML = html;
+                    }
+                }
+            } catch (error) {
+                document.getElementById('studentsList').innerHTML = '<p>Error loading students</p>';
+            }
+        }
+
+        async function loadAttendanceForm(courseId) {
+            if (!courseId) {
+                document.getElementById('attendanceForm').innerHTML = '';
+                return;
+            }
+
+            selectedCourse = courseId;
+
+            try {
+                const response = await fetch(`/api/faculty/course/${courseId}/students`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    const students = result.data;
+                    if (students.length === 0) {
+                        document.getElementById('attendanceForm').innerHTML = '<p>No students enrolled in this course.</p>';
+                    } else {
+                        let html = '<div id="attendanceAlert"></div><table><thead><tr><th>Student</th><th>Status</th></tr></thead><tbody>';
+                        
+                        students.forEach(student => {
+                            html += `
+                                <tr>
+                                    <td>${student.name}</td>
+                                    <td>
+                                        <select class="status-select" data-student-id="${student.id}">
+                                            <option value="Present">Present</option>
+                                            <option value="Absent">Absent</option>
+                                            <option value="Late">Late</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                            `;
+                        });
+                        
+                        html += '</tbody></table>';
+                        html += '<button class="action-btn" onclick="submitAttendance()" style="margin-top: 20px;">Submit Attendance</button>';
+                        document.getElementById('attendanceForm').innerHTML = html;
+                    }
+                }
+            } catch (error) {
+                document.getElementById('attendanceForm').innerHTML = '<p>Error loading students</p>';
+            }
+        }
+
+        async function submitAttendance() {
+            const attendanceData = [];
+            document.querySelectorAll('.status-select').forEach(select => {
+                attendanceData.push({
+                    studentId: select.dataset.studentId,
+                    status: select.value
+                });
+            });
+
+            try {
+                const response = await fetch('/api/faculty/attendance', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        courseId: selectedCourse,
+                        attendance: attendanceData
+                    })
+                });
+
+                const result = await response.json();
+                const alertDiv = document.getElementById('attendanceAlert');
+                
+                if (result.success) {
+                    alertDiv.innerHTML = '<div class="alert alert-success">✓ Attendance marked successfully!</div>';
+                } else {
+                    alertDiv.innerHTML = '<div class="alert alert-error">✗ Error: ' + result.message + '</div>';
+                }
+            } catch (error) {
+                document.getElementById('attendanceAlert').innerHTML = '<div class="alert alert-error">✗ Error submitting attendance</div>';
+            }
+        }
+
+        async function loadGradesForm(courseId) {
+            if (!courseId) {
+                document.getElementById('gradesForm').innerHTML = '';
+                return;
+            }
+
+            selectedCourse = courseId;
+
+            try {
+                const response = await fetch(`/api/faculty/course/${courseId}/marks`);
+                const result = await response.json();
+
+                if (result.success) {
+                    const components = result.components || [];
+                    const students = result.students || [];
+                    const isLocked = false; // reuse grade lock endpoint if needed
+
+                    if (students.length === 0) {
+                        document.getElementById('gradesForm').innerHTML = '<p>No students enrolled in this course.</p>';
+                        return;
+                    }
+
+                    // build header
+                    let html = `<div id="gradesAlert"></div><div style="display:flex; gap:10px; align-items:center; margin-bottom:12px;">
+                                    <button id="lockBtn" class="action-btn">Toggle Lock</button>
+                                    <input type="file" id="gradesCsv" accept="text/csv" />
+                                    <button class="action-btn" onclick="downloadGradesCSV()">Download CSV</button>
+                                </div>`;
+
+                    html += '<table><thead><tr><th>Student</th>';
+                    components.forEach(c => { html += `<th>${c.name} (${c.maxMarks})</th>` });
+                    html += '<th>Total</th><th>Letter</th></tr></thead><tbody>';
+
+                    students.forEach(student => {
+                        html += `<tr><td>${student.name}</td>`;
+                        components.forEach(c => {
+                            const val = student.marks && student.marks[c.id] != null ? student.marks[c.id] : '';
+                            const disabled = (c.name.toLowerCase() === 'attendance') ? 'disabled' : '';
+                            html += `<td><input type="number" step="0.01" min="0" max="${c.maxMarks}" class="marks-input" data-student-id="${student.id}" data-component-id="${c.id}" value="${val}" ${disabled} /></td>`;
+                        });
+                        html += `<td>${student.totalScore}</td><td>${student.letter || ''}</td></tr>`;
+                    });
+
+                    html += '</tbody></table>';
+                    html += '<button class="action-btn" onclick="submitMarks()" style="margin-top:20px;">Save Marks</button>';
+
+                    document.getElementById('gradesForm').innerHTML = html;
+
+                    document.getElementById('lockBtn').addEventListener('click', () => toggleLock(courseId, true));
+                    document.getElementById('gradesCsv').addEventListener('change', (ev) => uploadGradesCSV(ev, courseId, components));
+                }
+            } catch (error) {
+                document.getElementById('gradesForm').innerHTML = '<p>Error loading marks</p>';
+            }
+        }
+
+        async function submitMarks() {
+            const marks = [];
+            document.querySelectorAll('.marks-input').forEach(input => {
+                const sid = input.dataset.studentId;
+                const cid = input.dataset.componentId;
+                const val = input.value;
+                if (val !== '') marks.push({ studentId: sid, componentId: cid, marks: parseFloat(val) });
+            });
+
+            if (marks.length === 0) { alert('No marks to save'); return; }
+
+            try {
+                const res = await fetch(`/api/faculty/course/${selectedCourse}/marks`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ marks }) });
+                const result = await res.json();
+                const alertDiv = document.getElementById('gradesAlert');
+                if (result.success) {
+                    alertDiv.innerHTML = '<div class="alert alert-success">✓ Marks saved successfully!</div>';
+                    loadGradesForm(selectedCourse);
+                } else {
+                    alertDiv.innerHTML = '<div class="alert alert-error">✗ Error: ' + result.message + '</div>';
+                }
+            } catch (e) {
+                document.getElementById('gradesAlert').innerHTML = '<div class="alert alert-error">✗ Error saving marks</div>';
+            }
+        }
+
+        async function toggleLock(courseId, lockFlag) {
+            try {
+                const response = await fetch(`/api/faculty/course/${courseId}/lock`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ lock: lockFlag })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    loadGradesForm(courseId);
+                } else {
+                    alert('Lock action failed: ' + result.message);
+                }
+            } catch (e) {
+                alert('Lock request failed');
+            }
+        }
+
+        function downloadGradesCSV() {
+            const header = ['Student'];
+            const comps = Array.from(document.querySelectorAll('table thead th')).slice(1, -1).map(h => h.innerText);
+            const rows = [header.concat(comps).concat(['Total'])];
+
+            document.querySelectorAll('#gradesForm table tbody tr').forEach(tr => {
+                const cells = [tr.querySelector('td').innerText.trim()];
+                tr.querySelectorAll('input.marks-input').forEach(inp => cells.push(inp.value || ''));
+                const total = tr.querySelectorAll('td').item(tr.querySelectorAll('td').length - 1).innerText;
+                cells.push(total);
+                rows.push(cells);
+            });
+
+            const csv = rows.map(r => r.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(',')).join('\n');
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = `grades_${selectedCourse}.csv`;
+            document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+        }
+
+        async function uploadGradesCSV(ev, courseId, components) {
+            const file = ev.target.files[0];
+            if (!file) return;
+            const text = await file.text();
+            const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l);
+            if (lines.length < 2) { alert('CSV must have header and rows'); return; }
+
+            const header = lines[0].split(',').map(h => h.replace(/"/g, '').trim());
+            const compNames = header.slice(1, header.length - 1).map(h => h);
+
+            const marks = [];
+            for (let i = 1; i < lines.length; i++) {
+                const cols = lines[i].split(',').map(c => c.replace(/"/g, '').trim());
+                if (cols.length < 2) continue;
+                const name = cols[0];
+                // find student row
+                const rows = Array.from(document.querySelectorAll('#gradesForm table tbody tr'));
+                for (const row of rows) {
+                    if (row.querySelector('td').innerText.trim() === name) {
+                        const sid = row.querySelector('input.marks-input').dataset.studentId;
+                        for (let j = 0; j < compNames.length; j++) {
+                            const compName = compNames[j];
+                            const comp = components.find(c => `${c.name} (${c.maxMarks})` === compName || c.name === compName);
+                            if (comp) {
+                                const val = cols[1 + j];
+                                if (val !== '') marks.push({ studentId: sid, componentId: comp.id, marks: parseFloat(val) });
+                            }
+                        }
+                        break;
+                    }
+                }
+            }
+
+            if (marks.length === 0) { alert('No matching students/components found in CSV'); return; }
+
+            try {
+                const res = await fetch(`/api/faculty/course/${courseId}/marks`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ marks }) });
+                const result = await res.json();
+                if (result.success) loadGradesForm(courseId); else alert('Upload failed: ' + result.message);
+            } catch (e) { alert('Upload error'); }
+        }
+
+        async function loadThresholds() {
+            try {
+                const res = await fetch('/api/config/grade-thresholds');
+                const result = await res.json();
+                if (result.success) {
+                    const thrs = result.thresholds || [];
+                    let html = '<div id="thresholdsAlert"></div>';
+                    // Render read-only table for faculty (no edit controls)
+                    html += '<table><thead><tr><th>Letter</th><th>Min %</th></tr></thead><tbody>';
+                    thrs.forEach((t, idx) => {
+                        html += `<tr><td><input type="text" value="${t.letter}" data-index="${idx}" class="thr-letter" style="width:50px;" disabled /></td><td><input type="number" value="${t.minPercent}" data-index="${idx}" class="thr-percent" step="0.01" style="width:80px;" disabled /></td></tr>`;
+                    });
+                    html += '</tbody></table>';
+                    html += '<p style="margin-top:12px; color:#666; font-size:13px;">Thresholds are configured by administrators. <a href="mailto:admin@school.local?subject=Grade%20Thresholds%20Request" class="contact-admin-link" title="Email the admin to request threshold changes">Contact admin to request changes</a>.</p>';
+                    document.getElementById('thresholdsData').innerHTML = html;
+                } else {
+                    document.getElementById('thresholdsData').innerHTML = '<p>No thresholds configured. <a href="mailto:admin@school.local?subject=Grade%20Thresholds%20Request" class="contact-admin-link">Contact admin to request changes</a>.</p>';
+                }
+            } catch (e) {
+                document.getElementById('thresholdsData').innerHTML = '<p>No thresholds configured. <a href="mailto:admin@school.local?subject=Grade%20Thresholds%20Request" class="contact-admin-link">Contact admin to request changes</a>.</p>';
+            }
+        }
+
+        function addThreshold() {
+            const tbody = document.querySelector('#thresholdsData table tbody');
+            const newIdx = tbody.children.length;
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td><input type="text" value="X" data-index="${newIdx}" class="thr-letter" style="width:50px;" /></td><td><input type="number" value="0" data-index="${newIdx}" class="thr-percent" step="0.01" style="width:80px;" /></td><td><button class="action-btn" onclick="deleteThreshold(${newIdx})" style="padding:4px 8px;">Delete</button></td>`;
+            tbody.appendChild(tr);
+        }
+
+        function deleteThreshold(idx) {
+            const rows = document.querySelectorAll('#thresholdsData table tbody tr');
+            if (rows[idx]) rows[idx].remove();
+        }
+
+        async function saveThresholds() {
+            const letters = document.querySelectorAll('.thr-letter');
+            const percents = document.querySelectorAll('.thr-percent');
+            const thrs = [];
+            for (let i = 0; i < letters.length; i++) {
+                thrs.push({ letter: letters[i].value.trim(), minPercent: parseFloat(percents[i].value) || 0 });
+            }
+            try {
+                const res = await fetch('/api/config/grade-thresholds', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ thresholds: thrs })
+                });
+                const result = await res.json();
+                const alertDiv = document.getElementById('thresholdsAlert');
+                if (result.success) {
+                    alertDiv.innerHTML = '<div class="alert alert-success">✓ Thresholds saved!</div>';
+                    loadThresholds();
+                } else {
+                    alertDiv.innerHTML = '<div class="alert alert-error">✗ Error: ' + result.message + '</div>';
+                }
+            } catch (e) {
+                document.getElementById('thresholdsAlert').innerHTML = '<div class="alert alert-error">✗ Error saving</div>';
+            }
+        }
+
+        // Load institution context, courses, and upcoming deadlines on page load
+        loadInstitutionContext();
+        loadCourses();
+        loadUpcomingDeadlines();
+        loadDashboardStats();
+    </script>
+</body>
+</html>
