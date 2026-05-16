@@ -90,17 +90,29 @@ python insert_test_data.py
 python app.py
 ```
 
-The application will be available at `http://localhost:5000`
+The application will be available at:
 
-## Default Test Credentials
+### 🌐 **http://localhost:5000**
 
-| Role | Login | Password |
-|------|-------|----------|
-| Admin | `admin` | `admin123` |
-| Faculty | `murtaza@gmail.com` | `faculty123` |
-| Student | `ali.updated@gmail.com` | `student123` |
+## Default Demo Accounts
+
+The system comes with 3 pre-configured demo accounts for testing:
+
+| Role | Login Field | Credentials | Access |
+|------|-------------|-------------|--------|
+| **Admin** | Username | `admin` / `admin123` | [Admin Dashboard](http://localhost:5000/admin/dashboard) |
+| **Faculty** | Email | `murtaza@gmail.com` / `faculty123` | [Faculty Dashboard](http://localhost:5000/faculty/dashboard) |
+| **Student** | Email | `ali.updated@gmail.com` / `student123` | [Student Dashboard](http://localhost:5000/student/dashboard) |
+
+Admin manages all user accounts in the database. Self-registration is disabled.
 
 **⚠️ Change these credentials in production!**
+
+### Quick Test URLs:
+- Login Page: http://localhost:5000
+- Admin Dashboard: http://localhost:5000/admin/dashboard
+- Faculty Dashboard: http://localhost:5000/faculty/dashboard
+- Student Dashboard: http://localhost:5000/student/dashboard
 
 ## API Endpoints
 
