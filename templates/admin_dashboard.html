@@ -486,6 +486,30 @@
                 </div>
 
                 <div id="marksData" class="loading">Select a subject to manage marks.</div>
+
+                <div class="card" style="margin-top: 22px; padding: 18px; background: #f7fbff; border: 1px solid #dbeafe;">
+                    <h3 style="margin-top: 0;">Final Year Result</h3>
+                    <p style="margin-top: 0; color: #555;">Preview the final-year aggregate using the same weighted formula and thresholds.</p>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Select Student</label>
+                            <select id="finalYearStudentSelect">
+                                <option value="">-- Select Student --</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Aggregation</label>
+                            <select id="finalYearModeSelect">
+                                <option value="0">Equal subject weighting</option>
+                                <option value="1">Weight by credits</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button class="action-btn" type="button" onclick="loadFinalYearResult()">Calculate Final Year Result</button>
+                    <div id="finalYearResultBox" class="info-box" style="margin-top: 16px; min-height: 80px;">
+                        <p style="margin: 0; color: #666;">Select a student to calculate the overall result.</p>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -1643,6 +1667,7 @@
 
         async function loadMarksSetup() {
             await loadMarksSubjectOptions();
+            await loadFinalYearStudentOptions();
             await loadGradingFormulaInfo();
             marksLoaded = true;
         }
@@ -1752,6 +1777,90 @@
                 document.getElementById('marksData').innerHTML = html;
             } catch (error) {
                 document.getElementById('marksData').innerHTML = '<p>Error loading marks.</p>';
+            }
+        }
+
+        async function loadFinalYearStudentOptions() {
+            try {
+                const response = await fetch('/api/admin/students');
+                const result = await response.json();
+                const select = document.getElementById('finalYearStudentSelect');
+
+                if (!result.success || !result.data) {
+                    select.innerHTML = '<option value="">-- No students available --</option>';
+                    return;
+                }
+
+                let options = '<option value="">-- Select Student --</option>';
+                result.data.forEach(student => {
+                    const fullName = `${student.firstName} ${student.lastName}`.trim();
+                    options += `<option value="${student.id}">${fullName} (${student.email})</option>`;
+                });
+
+                select.innerHTML = options;
+            } catch (error) {
+                const select = document.getElementById('finalYearStudentSelect');
+                if (select) {
+                    select.innerHTML = '<option value="">-- Failed to load students --</option>';
+                }
+            }
+        }
+
+        async function loadFinalYearResult() {
+            const studentId = document.getElementById('finalYearStudentSelect').value;
+            const byCredits = document.getElementById('finalYearModeSelect').value === '1';
+            const box = document.getElementById('finalYearResultBox');
+
+            if (!studentId) {
+                box.innerHTML = '<p style="margin: 0; color: #666;">Please select a student first.</p>';
+                return;
+            }
+
+            box.innerHTML = '<p style="margin: 0; color: #666;">Calculating final year result...</p>';
+
+            try {
+                const response = await fetch(`/api/admin/student/${studentId}/final-year-result?byCredits=${byCredits ? '1' : '0'}`);
+                const result = await response.json();
+
+                if (!result.success || !result.data) {
+                    box.innerHTML = '<p style="margin: 0; color: #b91c1c;">Could not calculate the final-year result.</p>';
+                    return;
+                }
+
+                const subjectRows = (result.data.subjects || []).map(subject => `
+                    <tr>
+                        <td>${subject.subjectName}</td>
+                        <td>${subject.credits}</td>
+                        <td>${Number(subject.percent || 0).toFixed(2)}%</td>
+                    </tr>
+                `).join('');
+
+                box.innerHTML = `
+                    <div style="display:grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 16px;">
+                        <div style="background:#fff; border:1px solid #dbeafe; border-radius:10px; padding:12px;">
+                            <div style="font-size:12px; color:#64748b;">Overall Percent</div>
+                            <div style="font-size:24px; font-weight:700; color:#0f172a;">${Number(result.data.overallPercent || 0).toFixed(2)}%</div>
+                        </div>
+                        <div style="background:#fff; border:1px solid #dbeafe; border-radius:10px; padding:12px;">
+                            <div style="font-size:12px; color:#64748b;">Final Grade</div>
+                            <div style="font-size:24px; font-weight:700; color:#0f172a;">${result.data.letter || '-'}</div>
+                        </div>
+                        <div style="background:#fff; border:1px solid #dbeafe; border-radius:10px; padding:12px;">
+                            <div style="font-size:12px; color:#64748b;">Mode</div>
+                            <div style="font-size:18px; font-weight:700; color:#0f172a;">${byCredits ? 'Credit weighted' : 'Equal weighted'}</div>
+                        </div>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr><th>Subject</th><th>Credits</th><th>Subject Percent</th></tr>
+                        </thead>
+                        <tbody>
+                            ${subjectRows || '<tr><td colspan="3">No subjects found for this student.</td></tr>'}
+                        </tbody>
+                    </table>
+                `;
+            } catch (error) {
+                box.innerHTML = '<p style="margin: 0; color: #b91c1c;">Error calculating final-year result.</p>';
             }
         }
 
