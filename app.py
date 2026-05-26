@@ -260,6 +260,148 @@ def get_institution_settings(cursor):
     }
 
 
+def get_institution_grading_preset(institution_type):
+    inst = (institution_type or 'School').strip().title()
+
+    presets = {
+        'School': {
+            'components': [
+                {'name': 'Mids', 'maxMarks': 100, 'weight': 20.0},
+                {'name': 'Quiz', 'maxMarks': 100, 'weight': 15.0},
+                {'name': 'Assignment', 'maxMarks': 100, 'weight': 15.0},
+                {'name': 'Final', 'maxMarks': 100, 'weight': 40.0},
+                {'name': 'Lab', 'maxMarks': 100, 'weight': 10.0}
+            ],
+            'thresholds': [('A+', 90.0), ('A', 80.0), ('B', 70.0), ('C', 60.0), ('D', 50.0), ('F', 0.0)]
+        },
+        'College': {
+            'components': [
+                {'name': 'Mids', 'maxMarks': 100, 'weight': 25.0},
+                {'name': 'Quiz', 'maxMarks': 100, 'weight': 10.0},
+                {'name': 'Assignment', 'maxMarks': 100, 'weight': 15.0},
+                {'name': 'Final', 'maxMarks': 100, 'weight': 35.0},
+                {'name': 'Lab', 'maxMarks': 100, 'weight': 15.0}
+            ],
+            'thresholds': [('A+', 90.0), ('A', 82.0), ('B+', 75.0), ('B', 68.0), ('C', 60.0), ('D', 50.0), ('F', 0.0)]
+        },
+        'University': {
+            'components': [
+                {'name': 'Mids', 'maxMarks': 100, 'weight': 20.0},
+                {'name': 'Quiz', 'maxMarks': 100, 'weight': 10.0},
+                {'name': 'Assignment', 'maxMarks': 100, 'weight': 20.0},
+                {'name': 'Final', 'maxMarks': 100, 'weight': 35.0},
+                {'name': 'Lab', 'maxMarks': 100, 'weight': 15.0}
+            ],
+            'thresholds': [('A', 85.0), ('A-', 80.0), ('B+', 75.0), ('B', 70.0), ('C+', 65.0), ('C', 60.0), ('D', 50.0), ('F', 0.0)]
+        }
+    }
+
+    return presets.get(inst, presets['School'])
+
+
+def ensure_default_components_for_subject(cursor, course_id, institution_type=None, strict=False):
+    preset = get_institution_grading_preset(institution_type)
+    target = preset['components']
+
+    cursor.execute("SELECT ComponentID, Name FROM GradeComponents WHERE SubjectID = ? ORDER BY ComponentID", (course_id,))
+    existing_rows = cursor.fetchall()
+
+    alias = {
+        'mids': ['mids', 'mid', 'midterm', 'mid-term'],
+        'quiz': ['quiz', 'quizzes'],
+        'assignment': ['assignment', 'assignments'],
+        'final': ['final', 'finals', 'final exam'],
+        'lab': ['lab', 'practical', 'practicals']
+    }
+
+    existing_map = {}
+    for row in existing_rows:
+        nm = (row[1] or '').strip().lower()
+        existing_map[nm] = row[0]
+
+    for comp in target:
+        canonical = comp['name']
+        key = canonical.strip().lower()
+        comp_id = None
+        for candidate in alias.get(key, [key]):
+            if candidate in existing_map:
+                comp_id = existing_map[candidate]
+                break
+
+        if comp_id:
+            cursor.execute(
+                "UPDATE GradeComponents SET Name = ?, MaxMarks = ?, WeightPercent = ? WHERE ComponentID = ?",
+                (canonical, comp['maxMarks'], comp['weight'], comp_id)
+            )
+        else:
+            cursor.execute(
+                "INSERT INTO GradeComponents (SubjectID, Name, MaxMarks, WeightPercent) VALUES (?, ?, ?, ?)",
+                (course_id, canonical, comp['maxMarks'], comp['weight'])
+            )
+
+    if strict:
+        canonical_names = [comp['name'].strip().lower() for comp in target]
+        if canonical_names:
+            placeholders = ','.join(['?'] * len(canonical_names))
+            params = [course_id] + canonical_names
+            cursor.execute(
+                f"UPDATE GradeComponents SET WeightPercent = 0 WHERE SubjectID = ? AND LOWER(Name) NOT IN ({placeholders})",
+                params
+            )
+        else:
+            cursor.execute("UPDATE GradeComponents SET WeightPercent = 0 WHERE SubjectID = ?", (course_id,))
+
+
+def apply_institution_grading_criteria(cursor, institution_type):
+    ensure_marks_tables(cursor)
+    ensure_thresholds_table(cursor)
+
+    preset = get_institution_grading_preset(institution_type)
+
+    cursor.execute("DELETE FROM GradeThresholds")
+    for letter, min_pct in preset['thresholds']:
+        cursor.execute("INSERT INTO GradeThresholds (Letter, MinPercent) VALUES (?, ?)", (letter, min_pct))
+
+    cursor.execute("SELECT SubjectID FROM Subjects")
+    subject_rows = cursor.fetchall()
+    for row in subject_rows:
+        ensure_default_components_for_subject(cursor, row[0], institution_type, strict=True)
+
+
+def recompute_and_store_letter_grade(cursor, course_id, student_id):
+    cursor.execute("SELECT ComponentID, MaxMarks, WeightPercent FROM GradeComponents WHERE SubjectID = ? ORDER BY ComponentID", (course_id,))
+    comps = cursor.fetchall()
+
+    total_score = 0.0
+    total_weight = 0.0
+
+    for c in comps:
+        cid, maxm, wt = c[0], float(c[1] or 0), float(c[2] or 0)
+        if maxm <= 0 or wt <= 0:
+            continue
+
+        cursor.execute("SELECT MarksObtained FROM StudentMarks WHERE StudentID = ? AND SubjectID = ? AND ComponentID = ?", (student_id, course_id, cid))
+        m = cursor.fetchone()
+        if not m or m[0] is None:
+            continue
+
+        total_score += (float(m[0]) / maxm) * wt
+        total_weight += wt
+
+    pct = (total_score / total_weight * 100.0) if total_weight > 0 else 0.0
+
+    cursor.execute("SELECT Letter, MinPercent FROM GradeThresholds ORDER BY MinPercent DESC")
+    thrs = cursor.fetchall()
+    letter = None
+    for t in thrs:
+        if pct >= float(t[1]):
+            letter = t[0]
+            break
+
+    if letter:
+        cursor.execute("UPDATE Enrollments SET Grade = ? WHERE StudentID = ? AND SubjectID = ?", (letter, student_id, course_id))
+
+
 def allowed_resource_file(filename):
     _, ext = os.path.splitext(filename or '')
     return ext.lower() in ALLOWED_RESOURCE_EXTENSIONS
@@ -440,6 +582,117 @@ def get_student_subjects():
         })
     
     return jsonify({'success': True, 'data': result})
+
+
+@app.route('/api/admin/student/<int:student_id>/final-year-result')
+def get_final_year_result(student_id):
+    # Admins can view any student's final-year aggregated result; students can view their own
+    if 'user_type' not in session:
+        return jsonify({'success': False, 'message': 'Unauthorized'}), 403
+    if session['user_type'] != 'admin' and not (session['user_type'] == 'student' and session.get('user_id') == student_id):
+        return jsonify({'success': False, 'message': 'Unauthorized'}), 403
+
+    year = request.args.get('year')
+    by_credits = request.args.get('byCredits', '0') == '1'
+
+    conn = DatabaseConfig.get_connection()
+    cursor = conn.cursor()
+
+    try:
+        # find enrollments for the student optionally filtering by class AcademicYear
+        if year:
+            cursor.execute("""
+                SELECT e.SubjectID, s.SubjectName, s.Credits, c.AcademicYear
+                FROM Enrollments e
+                JOIN Subjects s ON e.SubjectID = s.SubjectID
+                LEFT JOIN Classes c ON s.ClassID = c.ClassID
+                WHERE e.StudentID = ? AND c.AcademicYear = ?
+            """, (student_id, year))
+        else:
+            cursor.execute("""
+                SELECT e.SubjectID, s.SubjectName, s.Credits, c.AcademicYear
+                FROM Enrollments e
+                JOIN Subjects s ON e.SubjectID = s.SubjectID
+                LEFT JOIN Classes c ON s.ClassID = c.ClassID
+                WHERE e.StudentID = ?
+            """, (student_id,))
+
+        rows = cursor.fetchall()
+        if not rows:
+            conn.close()
+            return jsonify({'success': True, 'data': {'subjects': [], 'overallPercent': 0.0, 'letter': ''}})
+
+        subject_results = []
+        total_weighted = 0.0
+        total_credits = 0.0
+
+        # load thresholds
+        try:
+            ensure_thresholds_table(cursor)
+            cursor.execute("SELECT Letter, MinPercent FROM GradeThresholds ORDER BY MinPercent DESC")
+            thr_rows = cursor.fetchall()
+            thresholds = [(r[0], float(r[1])) for r in thr_rows]
+        except Exception:
+            thresholds = []
+
+        for r in rows:
+            subject_id = r[0]
+            subject_name = r[1]
+            credits = float(r[2] or 0)
+
+            # load components
+            cursor.execute("SELECT ComponentID, MaxMarks, WeightPercent FROM GradeComponents WHERE SubjectID = ?", (subject_id,))
+            comps = cursor.fetchall()
+            if not comps:
+                # apply defaults if necessary
+                settings = get_institution_settings(cursor)
+                ensure_default_components_for_subject(cursor, subject_id, settings.get('institutionType'))
+                conn.commit()
+                cursor.execute("SELECT ComponentID, MaxMarks, WeightPercent FROM GradeComponents WHERE SubjectID = ?", (subject_id,))
+                comps = cursor.fetchall()
+
+            total_score = 0.0
+            total_weight = 0.0
+            for comp in comps:
+                comp_id = comp[0]
+                maxm = float(comp[1] or 0)
+                weight = float(comp[2] or 0)
+                cursor.execute("SELECT MarksObtained FROM StudentMarks WHERE StudentID = ? AND SubjectID = ? AND ComponentID = ?", (student_id, subject_id, comp_id))
+                mrow = cursor.fetchone()
+                marks = float(mrow[0]) if mrow and mrow[0] is not None else None
+                if marks is not None and maxm > 0 and weight:
+                    try:
+                        total_score += (marks / maxm) * weight
+                        total_weight += weight
+                    except Exception:
+                        pass
+
+            percent = (total_score / total_weight * 100.0) if total_weight > 0 else 0.0
+
+            subject_results.append({'subjectId': subject_id, 'subjectName': subject_name, 'credits': credits, 'percent': round(percent,2)})
+
+            if by_credits:
+                total_weighted += percent * credits
+                total_credits += credits
+            else:
+                total_weighted += percent
+                total_credits += 1.0
+
+        overall_percent = (total_weighted / total_credits) if total_credits > 0 else 0.0
+
+        # compute letter
+        letter = ''
+        if thresholds:
+            for lt, mp in thresholds:
+                if overall_percent >= mp:
+                    letter = lt
+                    break
+
+        conn.close()
+        return jsonify({'success': True, 'data': {'subjects': subject_results, 'overallPercent': round(overall_percent,2), 'letter': letter}})
+    except Exception as e:
+        conn.close()
+        return jsonify({'success': False, 'message': str(e)})
 
 @app.route('/api/student/available-subjects')
 def get_available_subjects():
@@ -725,7 +978,7 @@ def get_course_grades(course_id):
 
 @app.route('/api/faculty/course/<int:course_id>/marks')
 def get_course_marks(course_id):
-    if 'user_type' not in session or session['user_type'] != 'faculty':
+    if 'user_type' not in session or session['user_type'] not in ('faculty', 'admin'):
         return jsonify({'success': False})
 
     conn = DatabaseConfig.get_connection()
@@ -736,17 +989,10 @@ def get_course_marks(course_id):
     cursor.execute("SELECT ComponentID, Name, MaxMarks, WeightPercent FROM GradeComponents WHERE SubjectID = ? ORDER BY ComponentID", (course_id,))
     comps = cursor.fetchall()
 
-    # if no components, create defaults (Mid, Final, Assignment, Quiz, Attendance)
+    # if no components, create default grading rubric by institution type
     if not comps:
-        defaults = [
-            ('Mid', 30, 30.0),
-            ('Final', 50, 50.0),
-            ('Assignment', 10, 10.0),
-            ('Quiz', 10, 10.0),
-            ('Attendance', 10, 0.0)  # attendance weight 0 by default unless configured
-        ]
-        for name, maxm, weight in defaults:
-            cursor.execute("INSERT INTO GradeComponents (SubjectID, Name, MaxMarks, WeightPercent) VALUES (?, ?, ?, ?)", (course_id, name, maxm, weight))
+        settings = get_institution_settings(cursor)
+        ensure_default_components_for_subject(cursor, course_id, settings.get('institutionType'))
         conn.commit()
         cursor.execute("SELECT ComponentID, Name, MaxMarks, WeightPercent FROM GradeComponents WHERE SubjectID = ? ORDER BY ComponentID", (course_id,))
         comps = cursor.fetchall()
@@ -758,14 +1004,6 @@ def get_course_marks(course_id):
     # load students
     cursor.execute("SELECT s.StudentID, s.FirstName, s.LastName, s.Email, c.ClassName FROM Enrollments e JOIN Students s ON e.StudentID = s.StudentID LEFT JOIN Classes c ON s.ClassID = c.ClassID WHERE e.SubjectID = ? ORDER BY s.LastName, s.FirstName", (course_id,))
     students = cursor.fetchall()
-
-    # total sessions for attendance
-    try:
-        cursor.execute("SELECT COUNT(DISTINCT Date) FROM Attendance WHERE SubjectID = ?", (course_id,))
-        total_sessions_row = cursor.fetchone()
-        total_sessions = int(total_sessions_row[0] or 0)
-    except Exception:
-        total_sessions = 0
 
     data_students = []
     for s in students:
@@ -780,23 +1018,6 @@ def get_course_marks(course_id):
             cursor.execute("SELECT MarksObtained FROM StudentMarks WHERE StudentID = ? AND SubjectID = ? AND ComponentID = ?", (sid, course_id, comp_id))
             mrow = cursor.fetchone()
             marks = float(mrow[0]) if mrow and mrow[0] is not None else None
-
-            # attendance component special
-            if comp['name'].lower() == 'attendance':
-                present = 0
-                try:
-                    cursor.execute("SELECT COUNT(*) FROM Attendance WHERE SubjectID = ? AND StudentID = ? AND Status = 'Present'", (course_id, sid))
-                    present = int(cursor.fetchone()[0] or 0)
-                except Exception:
-                    present = 0
-
-                attendance_percent = (present / total_sessions * 100.0) if total_sessions > 0 else 0.0
-                attendance_marks = attendance_percent / 100.0 * comp['maxMarks']
-                marks_map[comp_id] = round(attendance_marks, 2)
-                # apply weight
-                total_score += (attendance_marks / comp['maxMarks'] * comp['weight']) if comp['maxMarks'] > 0 else 0
-                total_weight += comp['weight']
-                continue
 
             marks_map[comp_id] = marks
             if marks is not None and comp['maxMarks'] and comp['weight']:
@@ -842,7 +1063,7 @@ def get_course_marks(course_id):
 
 @app.route('/api/faculty/course/<int:course_id>/marks', methods=['POST'])
 def post_course_marks(course_id):
-    if 'user_type' not in session or session['user_type'] != 'faculty':
+    if 'user_type' not in session or session['user_type'] not in ('faculty', 'admin'):
         return jsonify({'success': False})
 
     data = request.json or {}
@@ -853,12 +1074,15 @@ def post_course_marks(course_id):
     ensure_thresholds_table(cursor)
 
     try:
+        touched_students = set()
+
         for rec in marks:
             student_id = rec.get('studentId')
             comp_id = rec.get('componentId')
             val = rec.get('marks')
             if student_id is None or comp_id is None or val is None:
                 continue
+            touched_students.add(int(student_id))
             # upsert
             cursor.execute("SELECT MarkID FROM StudentMarks WHERE StudentID = ? AND SubjectID = ? AND ComponentID = ?", (student_id, course_id, comp_id))
             existing = cursor.fetchone()
@@ -867,30 +1091,8 @@ def post_course_marks(course_id):
             else:
                 cursor.execute("INSERT INTO StudentMarks (StudentID, SubjectID, ComponentID, MarksObtained) VALUES (?, ?, ?, ?)", (student_id, course_id, comp_id, val))
 
-        # compute and write letter grade to Enrollments.Grade
-        cursor.execute("SELECT ComponentID, MaxMarks, WeightPercent FROM GradeComponents WHERE SubjectID = ? ORDER BY ComponentID", (course_id,))
-        comps = cursor.fetchall()
-        if comps:
-            total_score = 0.0
-            total_weight = 0.0
-            for c in comps:
-                cid, maxm, wt = c[0], float(c[1]), float(c[2])
-                cursor.execute("SELECT MarksObtained FROM StudentMarks WHERE StudentID = ? AND SubjectID = ? AND ComponentID = ?", (student_id, course_id, cid))
-                m = cursor.fetchone()
-                if m and m[0] is not None:
-                    total_score += (float(m[0]) / maxm) * wt if maxm > 0 else 0
-                    total_weight += wt
-            pct = total_score / total_weight * 100.0 if total_weight > 0 else 0.0
-            # get thresholds
-            cursor.execute("SELECT Letter, MinPercent FROM GradeThresholds ORDER BY MinPercent DESC")
-            thrs = cursor.fetchall()
-            letter = None
-            for t in thrs:
-                if pct >= float(t[1]):
-                    letter = t[0]
-                    break
-            if letter:
-                cursor.execute("UPDATE Enrollments SET Grade = ? WHERE StudentID = ? AND SubjectID = ?", (letter, student_id, course_id))
+        for sid in touched_students:
+            recompute_and_store_letter_grade(cursor, course_id, sid)
 
         conn.commit()
         conn.close()
@@ -942,8 +1144,8 @@ def grade_thresholds():
         cursor.execute("SELECT ThresholdID, Letter, MinPercent FROM GradeThresholds ORDER BY MinPercent DESC")
         rows = cursor.fetchall()
         if not rows:
-            # return defaults if empty
-            defaults = [('A', 90.0), ('B', 80.0), ('C', 70.0), ('D', 60.0), ('F', 0.0)]
+            settings = get_institution_settings(cursor)
+            defaults = get_institution_grading_preset(settings.get('institutionType')).get('thresholds', [])
             for letter, min_pct in defaults:
                 cursor.execute("INSERT INTO GradeThresholds (Letter, MinPercent) VALUES (?, ?)", (letter, min_pct))
             conn.commit()
@@ -996,12 +1198,49 @@ def institution_config():
             "UPDATE InstitutionSettings SET InstitutionName = ?, InstitutionType = ?, UpdatedAt = ? WHERE SettingID = ?",
             (institution_name, institution_type, datetime.now(), settings['id'])
         )
+        apply_institution_grading_criteria(cursor, institution_type)
         conn.commit()
         conn.close()
         return jsonify({'success': True, 'message': 'Institution settings updated'})
     except Exception as e:
         conn.close()
         return jsonify({'success': False, 'message': str(e)})
+
+
+@app.route('/api/config/grading-criteria', methods=['GET', 'POST'])
+def grading_criteria_config():
+    if 'user_type' not in session:
+        return jsonify({'success': False, 'message': 'Unauthorized'}), 403
+
+    conn = DatabaseConfig.get_connection()
+    cursor = conn.cursor()
+
+    try:
+        settings = get_institution_settings(cursor)
+        institution_type = settings.get('institutionType') or 'School'
+
+        if request.method == 'GET':
+            preset = get_institution_grading_preset(institution_type)
+            formula = "Weighted % = (Mids/max)*w + (Quiz/max)*w + (Assignment/max)*w + (Final/max)*w + (Lab/max)*w"
+            return jsonify({
+                'success': True,
+                'institutionType': institution_type,
+                'formula': formula,
+                'components': preset.get('components', []),
+                'thresholds': [{'letter': t[0], 'minPercent': float(t[1])} for t in preset.get('thresholds', [])]
+            })
+
+        if session.get('user_type') != 'admin':
+            return jsonify({'success': False, 'message': 'Unauthorized'}), 403
+
+        requested_type = (request.json or {}).get('institutionType') or institution_type
+        apply_institution_grading_criteria(cursor, requested_type)
+        conn.commit()
+        return jsonify({'success': True, 'message': f'Applied {requested_type} grading criteria to all subjects'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
+    finally:
+        conn.close()
 
 
 @app.route('/api/faculty/course/<int:course_id>/resources', methods=['GET', 'POST'])
