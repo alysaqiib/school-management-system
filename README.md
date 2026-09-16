@@ -100,9 +100,9 @@ The system comes with 3 pre-configured demo accounts for testing:
 
 | Role | Login Field | Credentials | Access |
 |------|-------------|-------------|--------|
-| **Admin** | Username | `admin` / `admin123` | [Admin Dashboard](http://localhost:5000/admin/dashboard) |
-| **Faculty** | Email | `murtaza@gmail.com` / `faculty123` | [Faculty Dashboard](http://localhost:5000/faculty/dashboard) |
-| **Student** | Email | `ali.updated@gmail.com` / `student123` | [Student Dashboard](http://localhost:5000/student/dashboard) |
+| **Admin** | Username | `admin` / `admin123` | 
+| **Faculty** | Email | `murtaza@gmail.com` / `faculty123` 
+| **Student** | Email | `ali.updated@gmail.com` / `student123` 
 
 Admin manages all user accounts in the database. Self-registration is disabled.
 
