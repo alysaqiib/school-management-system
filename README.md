@@ -108,11 +108,6 @@ Admin manages all user accounts in the database. Self-registration is disabled.
 
 **⚠️ Change these credentials in production!**
 
-### Quick Test URLs:
-- Login Page: http://localhost:5000
-- Admin Dashboard: http://localhost:5000/admin/dashboard
-- Faculty Dashboard: http://localhost:5000/faculty/dashboard
-- Student Dashboard: http://localhost:5000/student/dashboard
 
 ## API Endpoints
 
